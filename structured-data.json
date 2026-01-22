@@ -1,0 +1,124 @@
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "NEWCOM Inc.",
+    "url": "https://www.newcom07.jp/",
+    "logo": "https://www.newcom07.jp/dbsheet/sfatest02/images/logo_newcom.svg",
+    "description": "大手企業を中心に600社の導入"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "dbSheet for SFA",
+    "applicationCategory": "BusinessApplication",
+    "operatingSystem": "Windows",
+    "description": "営業マネージャーが活用する「Excel 管理表」をそのまま画面として活かしながら、SFA での案件管理、予算管理などの数値管理、基幹システムの実績数値などをデータ連携させるシステムです。数値管理や集計などの営業マネージャーの負担を少なくし、案件創出に集中できる環境を実現します。",
+    "offers": {
+      "@type": "Offer",
+      "priceCurrency": "JPY",
+      "price": "1620000",
+      "description": "スモールスタートの場合 初期費用162万円"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "NEWCOM Inc."
+    }
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "なぜ営業は SFA を使わなくなるのか？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "数値管理と SFA が連携できておらず、Excel と SFA の二重管理になっているからです。SFA 活用の最大のハードルは「営業の入力」なのですが、SFA 導入や画面設計のタイミングでは、「営業の入力」が十分に考慮されていないことが多く、結果として、二重入力等の負担で SFA が活用できない会社が非常に多い状況となっています。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "なぜ dbSheet ができるのか",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "既存の数値管理や予算管理をそのままシステム化（SFA連携）ができます。各チームの実績集計や連携システムとの連動、複数レイヤー間の数値管理を行うワークフロー機能などにより、従来の予算管理に伴う営業マネージャーの負担の軽減につながります。Excel の使い勝手（コピペ・挿入・数値修正）をそのまま生かし、複数システムと連携できます。"
+        }
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "dbSheet for SFA 導入事例",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@type": "Article",
+          "name": "NEC ネクサソリューションズ様 予算管理システム",
+          "description": "予算マネジメント方法を標準化し、必要な情報の集約自動化や見込み判定の効率化、標準帳票を自動作成し、作業時間を大幅に短縮。"
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "item": {
+          "@type": "Article",
+          "name": "株式会社日立ハイテク様 営業台帳管理システム",
+          "description": "dbSheet で営業台帳のシステムを構築。基幹システムのフロントツールとしても活用し年間数十万契約の負担軽減を実現。"
+        }
+      }
+    ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareCompany",
+    "name": "NEWCOM Inc. - dbSheet for SFA",
+    "description": "営業マネージャーの「Excel 管理表」が SFA と連携するシステム。大手企業を中心に600社の導入実績。",
+    "url": "https://www.newcom07.jp/dbsheet/sfatest02/",
+    "areaServed": {
+      "@type": "Country",
+      "name": "Japan"
+    },
+    "serviceType": [
+      "SFA連携",
+      "Excel連携",
+      "営業支援システム",
+      "予算管理システム",
+      "基幹システム連携"
+    ],
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "dbSheet for SFA サービス",
+      "itemListElement": [
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "内製化・開発支援",
+            "description": "自社でシステム化を進めたい企業様向けに、各種セミナーや技術支援を行っています。"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "運用・保守サポート",
+            "description": "日々の運用で生じる疑問などのお問い合わせについても、サポート窓口にて対応いたします。"
+          }
+        },
+        {
+          "@type": "Offer",
+          "itemOffered": {
+            "@type": "Service",
+            "name": "コンサルティング",
+            "description": "管理帳表の統合サポートや、パイプラインの整理、会議体の設計など営業管理帳表の活性化に必要なサポートが可能です。"
+          }
+        }
+      ]
+    }
+  }
+]
+

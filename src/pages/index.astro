@@ -1,0 +1,37 @@
+---
+import App from '../components/App.jsx';
+import '../styles/global.css';
+
+// ページ基本情報（担当業務ダッシュボード）
+const title = '担当業務ダッシュボード | 塩崎｜営業企画部';
+const description = '塩崎専用の業務進捗ダッシュボード - Apple社内ツール級のUI/UX';
+const ogImage = '/images/mv_img.webp';
+---
+
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="dbSheet" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+  </head>
+  <body class="bg-white text-gray-800">
+    <!-- Firebase SDKs (Compat版) - bodyの最初に配置 -->
+    <script is:inline src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script is:inline src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script is:inline src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <main>
+      <App client:only="react" />
+    </main>
+  </body>
+</html>

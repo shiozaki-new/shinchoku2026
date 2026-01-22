@@ -1,0 +1,75 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700;900&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Noto Sans JP', 'Yu Gothic', YuGothic, 'Hiragino Kaku Gothic ProN', Meiryo,
+    sans-serif;
+  background-color: #ffffff;
+  color: #1f2937;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Brand wordmark split fonts (temporary with fallbacks).
+   To use official fonts, load Adobe Fonts kit providing:
+   - 'din-2014' (DIN 2014)
+   And ensure 'Gill Sans' is available (macOS) or provide licensed files.
+*/
+.font-db {
+  font-family: 'Gill Sans', 'Gill Sans MT', 'Gill Sans Nova', 'Trebuchet MS', Helvetica,
+    Arial, 'Noto Sans JP', sans-serif;
+}
+.font-sheet {
+  font-family: 'din-2014', 'DIN 2014', 'DIN Next', 'Rajdhani', 'Noto Sans JP', sans-serif;
+}
+
+/* Hero specific helpers: keep typography stable across browsers */
+.hero-title-sup {
+  /* Do not affect the line box of the heading */
+  line-height: 0;
+  position: relative;
+  top: -10px; /* visually align with 50px title */
+  font-size: 20px; /* 50px * 0.4 = 20px equivalent */
+}
+
+.hero-rendering-auto {
+  /* Disable extra kerning/ligatures that shift wrap positions */
+  text-rendering: auto;
+}
+
+/* Reusable CTA styles aligned with 02_Hero current pixels */
+@layer components {
+  /* Typography tokens per DESIGN.md */
+  .typ-h2 { @apply text-2xl font-bold; } /* 24px */
+  .typ-h3 { @apply text-xl font-bold; } /* 20px */
+  .typ-body { @apply text-base; }       /* 16px */
+  .typ-caption { @apply text-xs; }      /* 12px */
+
+  /* Section underline color (brand blue) */
+  .section-underline { background-color: #036eb7; }
+
+  .cta-base {
+    @apply inline-flex items-center justify-center rounded-full font-bold transition-all duration-200;
+    /* Exact pixels from 02_Hero current design */
+    width: 212.8px;
+    height: 50.4px;
+    font-size: 15.68px;
+  }
+  .cta-primary { /* Yellow filled */
+    @apply text-[#333333] bg-[#e6d226] hover:brightness-95;
+  }
+  .cta-outline { /* White outlined, transparent background */
+    @apply border border-white bg-transparent text-white transition-colors duration-200 hover:bg-white hover:text-[#036eb7];
+  }
+}
+
+/* Mobile: make CTA full-width while keeping height and typography */
+@media (max-width: 639.98px) {
+  .cta-base { width: 100%; }
+}

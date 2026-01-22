@@ -1,0 +1,28 @@
+{
+  "name": "astro",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build && node scripts/postbuild-clean.mjs",
+    "preview": "astro preview",
+    "astro": "astro",
+    "format:html": "prettier --write \"dist/**/*.html\" --parser html --ignore-path .prettierignore",
+    "build:pretty": "npm run build && npm run format:html"
+  }, 
+  "dependencies": {
+    "@astrojs/react": "^4.4.2",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "astro": "^5.16.4",
+    "react": "^19.2.1",
+    "react-dom": "^19.2.1"
+  },
+  "devDependencies": {
+    "@astrojs/tailwind": "^5.1.5",
+    "autoprefixer": "^10.4.22",
+    "postcss": "^8.5.6",
+    "prettier": "^3.7.4",
+    "tailwindcss": "^3.4.18"
+  }
+}

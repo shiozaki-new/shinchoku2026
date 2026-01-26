@@ -1,0 +1,52 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // 管理者メールアドレス判定関数
+    function isAdmin() {
+      return request.auth != null &&
+             request.auth.token.email == 'shiozaki@newcom07.jp';
+    }
+
+    // 認証済みユーザー判定関数
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ===================================================
+    // tasks コレクション（進捗管理表）
+    // ===================================================
+    match /tasks/{taskId} {
+      // 読み取り: 誰でも可
+      allow read: if true;
+
+      // 書き込み: 管理者のみ
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ===================================================
+    // hoshitori コレクション（星取管理表）
+    // ===================================================
+    match /hoshitori/{categoryId} {
+      // 読み取り: 認証済みユーザーのみ
+      allow read: if isAuthenticated();
+
+      // 書き込み: 管理者（塩崎）のみ
+      allow create, update, delete: if isAdmin();
+    }
+
+    // ===================================================
+    // hoshitori_logs コレクション（操作ログ）
+    // ===================================================
+    match /hoshitori_logs/{logId} {
+      // 読み取り: 管理者のみ
+      allow read: if isAdmin();
+
+      // 書き込み: 管理者のみ
+      allow create: if isAdmin();
+
+      // 更新・削除は不可（ログは不変）
+      allow update, delete: if false;
+    }
+  }
+}

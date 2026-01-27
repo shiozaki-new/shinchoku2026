@@ -902,15 +902,23 @@
 
   .hoshitori-modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg-modal); z-index: 1000; justify-content: center; align-items: center; padding: var(--space-lg); backdrop-filter: blur(4px); }
   .hoshitori-modal.active { display: flex; }
+  /* 操作性向上（UI変更なし）: モーダルが開いている間の背面スクロールを無効化 */
+  body.modal-open { overflow: hidden; }
+  /* iOSのスクロール連鎖/バウンスを抑制 */
+  .hoshitori-modal, .worklog-modal, .login-modal, #dashboardModal { overscroll-behavior: contain; }
   .hoshitori-container { background: var(--bg-secondary); border-radius: var(--radius-xl); width: 100%; max-width: 900px; max-height: 90vh; overflow: hidden; box-shadow: var(--shadow-heavy); display: flex; flex-direction: column; }
   .hoshitori-header { padding: var(--space-lg); border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
   .hoshitori-title { font-size: var(--font-size-xl); font-weight: 600; display: flex; align-items: center; gap: var(--space-sm); }
   .hoshitori-title::before { content: "★"; color: #FF9500; }
-  .hoshitori-body { padding: var(--space-lg); overflow: auto; flex: 1; }
-  .hoshitori-table-wrapper { overflow-x: auto; margin-bottom: var(--space-lg); }
+  /* 上方向の余白はテーブル側(margin-top)で与え、stickyの挙動を安定させる */
+  .hoshitori-body { padding: 0 var(--space-lg) var(--space-lg); overflow: auto; flex: 1; background: #fff; }
+  .hoshitori-body { -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+  .hoshitori-table-wrapper { overflow-x: auto; margin: var(--space-lg) 0 var(--space-lg); background: #fff; }
   .hoshitori-table { width: 100%; min-width: 600px; border-collapse: collapse; font-size: var(--font-size-sm); }
   .hoshitori-table th, .hoshitori-table td { border: 1px solid var(--border-color); padding: var(--space-sm) var(--space-md); text-align: center; vertical-align: middle; }
-  .hoshitori-table th { background: var(--bg-primary); font-weight: 600; position: sticky; top: 0; z-index: 10; }
+  .hoshitori-table th { background: #fff; font-weight: 600; position: sticky; top: 0; z-index: 10; }
+  .hoshitori-table thead th:first-child { border-left: 1px solid var(--border-color); }
+  .hoshitori-table thead th:last-child { border-right: 1px solid var(--border-color); }
   .hoshitori-table th:first-child { text-align: left; min-width: 200px; }
   .hoshitori-table th.member-col { min-width: 80px; }
   .hoshitori-table tr.category-row { background: #E5E5EA; }
@@ -920,7 +928,7 @@
   .owner-cell { cursor: default; transition: all 0.2s ease; user-select: none; min-height: 40px; }
   .owner-cell.editable { cursor: pointer; }
   .owner-cell.editable:hover { background: rgba(0, 122, 255, 0.1); }
-  .owner-cell .owner-mark { font-size: var(--font-size-xl); font-weight: bold; color: var(--color-jun); }
+  .owner-cell .owner-mark { font-size: calc(var(--font-size-xl) - 8px); font-weight: bold; color: var(--color-jun); }
   .admin-panel { display: none; padding: var(--space-md); background: var(--bg-primary); border-radius: var(--radius-md); margin-top: var(--space-md); }
   .admin-mode .admin-panel { display: block; }
   .admin-panel-title { font-size: var(--font-size-sm); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--space-sm); }
@@ -952,12 +960,116 @@
   .hoshitori-table tr.drop-target-above td { box-shadow: inset 0 2px 0 0 var(--color-jun); }
   .hoshitori-table tr.drop-target-below td { box-shadow: inset 0 -2px 0 0 var(--color-jun); }
   .hoshitori-table tr.reorder-focus td:first-child { outline: 2px solid var(--color-jun); outline-offset: -2px; }
+
+  /* Floating Admin Bar (FAB) */
+  .admin-fab {
+    position: fixed;
+    bottom: var(--space-xl);
+    right: var(--space-xl);
+    z-index: 3500;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(180deg, #007AFF 0%, #0056CC 100%);
+    color: white;
+    font-size: 28px;
+    font-weight: 300;
+    cursor: pointer;
+    box-shadow: var(--shadow-heavy);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  .admin-mode .admin-fab { display: flex; }
+  .admin-fab:hover { opacity: 0.9; transform: scale(1.05); }
+  .admin-fab:active { transform: scale(0.98); }
+  .admin-fab:focus-visible { outline: 2px solid #0056CC; outline-offset: 2px; }
+  .admin-fab.open { transform: rotate(45deg); }
+
+  .admin-fab-menu {
+    position: fixed;
+    right: var(--space-xl);
+    bottom: calc(var(--space-xl) + 68px);
+    max-width: 280px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-heavy);
+    padding: var(--space-md);
+    display: none;
+    z-index: 3500;
+  }
+  .admin-fab-menu.open { display: block; }
+  .admin-fab-menu-title {
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-sm);
+  }
+  .admin-fab-actions { display: flex; flex-direction: column; gap: var(--space-xs); }
+  .admin-fab-btn {
+    padding: 8px 12px;
+    font-size: var(--font-size-sm);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+  }
+  .admin-fab-btn:hover { border-color: var(--color-jun); color: var(--color-jun); }
+  .admin-fab-btn:focus-visible { outline: 2px solid #0056CC; outline-offset: 2px; }
+  .admin-fab-btn.danger:hover { border-color: var(--color-zetsu); color: var(--color-zetsu); }
+  .admin-fab-shortcut {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
   @media (max-width: 640px) {
     .hoshitori-container { max-height: 100vh; border-radius: 0; }
-    .hoshitori-body { padding: var(--space-md); }
+    /* sticky安定化: モバイルでも上パディングは0、余白はテーブル側で確保 */
+    .hoshitori-body { padding: 0 var(--space-md) var(--space-md); }
+    .hoshitori-table-wrapper { margin: var(--space-md) 0 var(--space-md); }
     .hoshitori-table { font-size: var(--font-size-xs); }
     .hoshitori-table th, .hoshitori-table td { padding: var(--space-xs) var(--space-sm); }
+    .admin-fab { bottom: var(--space-lg); right: var(--space-lg); width: 52px; height: 52px; font-size: 24px; }
+    .admin-fab-menu { right: var(--space-lg); bottom: calc(var(--space-lg) + 60px); max-width: calc(100vw - 48px); }
   }
+
+  /* Sticky Header for Hoshitori Table (CSS only, no JS overlay) */
+  /* 重要: sticky が効くためには、スクロールコンテナ(.hoshitori-body)と thead の間に
+     overflow: auto/scroll/hidden を持つ要素があってはならない */
+  .hoshitori-body { position: relative; overflow: auto; }
+  .hoshitori-table-wrapper { position: relative; overflow: visible; }
+  .hoshitori-table { border-collapse: separate; border-spacing: 0; }
+  .hoshitori-table thead { background: #fff; }
+  /* 行全体も固定して背景を保つ（空白が透けないように） */
+  .hoshitori-table thead tr {
+    position: sticky;
+    top: 0;
+    z-index: 12;                 /* 個別th(z-index:20)より下でOK。背景として機能 */
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .hoshitori-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+  }
+  .hoshitori-table thead th:first-child { border-left: 1px solid var(--border-color); }
+  .hoshitori-table thead th:last-child { border-right: 1px solid var(--border-color); }
 
   /* ===================================================
      Accessibility: Focus-visible for keyboard navigation
@@ -1898,6 +2010,7 @@
     // add: 新規タスクモーダルを開く
     function openNewTaskModal() {
       elements.newTaskModal.classList.add('active');
+      if (typeof onModalOpen === 'function') onModalOpen();
       // 今日以降のみ選択可
       const today = new Date();
       const yyyy = today.getFullYear();
@@ -1914,6 +2027,7 @@
 
     // add: 新規タスクモーダルを閉じる
     function closeNewTaskModal() {
+      if (elements.newTaskModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
       elements.newTaskModal.classList.remove('active');
       elements.newTaskError.style.display = 'none';
     }
@@ -2187,15 +2301,18 @@
     // ===================================================
     elements.btnOpenDashboard.addEventListener('click', () => {
       elements.dashboardModal.classList.add('active');
+      if (typeof onModalOpen === 'function') onModalOpen();
       renderDashboard();
     });
 
     elements.btnCloseDashboard.addEventListener('click', () => {
+      if (elements.dashboardModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
       elements.dashboardModal.classList.remove('active');
     });
 
     elements.dashboardModal.addEventListener('click', (e) => {
       if (e.target === elements.dashboardModal) {
+        if (elements.dashboardModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
         elements.dashboardModal.classList.remove('active');
       }
     });
@@ -2203,10 +2320,13 @@
     // ESCキーでモーダルを閉じる
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        const wasAnyActive = [elements.dashboardModal, elements.loginModal, elements.worklogModal, elements.newTaskModal]
+          .some(m => m && m.classList.contains('active'));
         elements.dashboardModal.classList.remove('active');
         elements.loginModal.classList.remove('active');
         elements.worklogModal.classList.remove('active');
         closeNewTaskModal();  // add: new-task modal
+        if (wasAnyActive && typeof onModalClose === 'function') onModalClose();
       }
     });
 
@@ -2264,37 +2384,41 @@
       if (currentUser) {
         signOut(auth);
       } else {
-        elements.loginModal.classList.add('active');
+        elements.loginModal.classList.add('active'); if (typeof onModalOpen === 'function') onModalOpen();
       }
     });
 
     // 作業完了ログ モーダル開閉
     if (elements.btnOpenWorklog) {
       elements.btnOpenWorklog.addEventListener('click', async () => {
-        elements.worklogModal.classList.add('active');
+        elements.worklogModal.classList.add('active'); if (typeof onModalOpen === 'function') onModalOpen();
         await renderWorklog();
       });
     }
     if (elements.btnCloseWorklog) {
       elements.btnCloseWorklog.addEventListener('click', () => {
+        if (elements.worklogModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
         elements.worklogModal.classList.remove('active');
       });
     }
     if (elements.worklogModal) {
       elements.worklogModal.addEventListener('click', (e) => {
         if (e.target === elements.worklogModal) {
+          if (elements.worklogModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
           elements.worklogModal.classList.remove('active');
         }
       });
     }
 
     elements.btnCloseLogin.addEventListener('click', () => {
+      if (elements.loginModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
       elements.loginModal.classList.remove('active');
       elements.loginError.classList.remove('show');
     });
 
     elements.loginModal.addEventListener('click', (e) => {
       if (e.target === elements.loginModal) {
+        if (elements.loginModal.classList.contains('active') && typeof onModalClose === 'function') onModalClose();
         elements.loginModal.classList.remove('active');
         elements.loginError.classList.remove('show');
       }
@@ -2813,6 +2937,137 @@
         document.getElementById('btnResetConfirmSettings')?.addEventListener('click', () => {
           resetConfirmSettings();
         });
+        // Floating Admin Bar
+        this.ensureFloatingAdminBar();
+      }
+      ensureFloatingAdminBar() {
+        const modal = hoshitoriElements.modal;
+        const existingFab = document.getElementById('adminFab');
+        const existingMenu = document.getElementById('adminFabMenu');
+
+        // Hide if not admin
+        if (!this.manager.isAdmin) {
+          if (existingFab) existingFab.style.display = 'none';
+          if (existingMenu) { existingMenu.style.display = 'none'; existingMenu.classList.remove('open'); }
+          return;
+        }
+
+        // Already exists - just show
+        if (existingFab && existingMenu) {
+          existingFab.style.display = '';
+          return;
+        }
+
+        // Create FAB
+        const fab = document.createElement('button');
+        fab.id = 'adminFab';
+        fab.className = 'admin-fab';
+        fab.setAttribute('aria-label', '管理者操作');
+        fab.setAttribute('title', '管理者操作 (G)');
+        fab.textContent = '＋';
+
+        // Create Menu
+        const menu = document.createElement('div');
+        menu.id = 'adminFabMenu';
+        menu.className = 'admin-fab-menu';
+        menu.setAttribute('role', 'menu');
+        menu.innerHTML = `
+          <div class="admin-fab-menu-title">管理者操作</div>
+          <div class="admin-fab-actions">
+            <button class="admin-fab-btn" id="fabAddCategory" role="menuitem">＋ 大項目追加<span class="admin-fab-shortcut">C</span></button>
+            <button class="admin-fab-btn" id="fabAddTask" role="menuitem">＋ タスク追加<span class="admin-fab-shortcut">T</span></button>
+            <button class="admin-fab-btn danger" id="fabDataManage" role="menuitem">データ管理<span class="admin-fab-shortcut">D</span></button>
+            <button class="admin-fab-btn" id="fabSeedData" role="menuitem">初期データ投入<span class="admin-fab-shortcut">S</span></button>
+            <button class="admin-fab-btn" id="fabResetConfirm" role="menuitem">確認設定リセット<span class="admin-fab-shortcut">R</span></button>
+          </div>
+        `;
+
+        modal.appendChild(fab);
+        modal.appendChild(menu);
+
+        const self = this;
+        const closeMenu = () => { menu.classList.remove('open'); fab.classList.remove('open'); };
+        const toggleMenu = () => {
+          const isOpen = menu.classList.toggle('open');
+          fab.classList.toggle('open', isOpen);
+          if (isOpen) document.getElementById('fabAddCategory')?.focus();
+        };
+
+        // FAB click
+        fab.addEventListener('click', (e) => { e.stopPropagation(); toggleMenu(); });
+
+        // Close on outside click
+        modal.addEventListener('click', (e) => {
+          if (!fab.contains(e.target) && !menu.contains(e.target)) closeMenu();
+        });
+
+        // Menu button handlers
+        document.getElementById('fabAddCategory')?.addEventListener('click', async () => {
+          closeMenu();
+          const title = await textInputDialog({ title: '大項目追加', label: '名称' });
+          if (title && title.trim()) {
+            try { await self.manager.addCategory(title.trim()); showToast('大項目を追加しました'); }
+            catch (e) { self.showError('大項目の追加に失敗しました: ' + (e.code || e.message)); }
+          }
+        });
+
+        document.getElementById('fabAddTask')?.addEventListener('click', async () => {
+          closeMenu();
+          const categories = self.manager.categories;
+          if (categories.length === 0) { showToast('先に大項目を追加してください'); return; }
+          const selectedCategoryId = await selectDialog({
+            title: '追加先の大項目を選択',
+            items: categories.map((c, i) => ({ id: c.id, label: `${i + 1}: ${c.title}` }))
+          });
+          if (!selectedCategoryId) return;
+          const taskName = await textInputDialog({ title: 'タスク追加', label: '名称' });
+          if (taskName && taskName.trim()) {
+            try { await self.manager.addTask(selectedCategoryId, taskName.trim()); showToast('タスクを追加しました'); }
+            catch (e) { self.showError('タスクの追加に失敗しました: ' + (e.code || e.message)); }
+          }
+        });
+
+        document.getElementById('fabDataManage')?.addEventListener('click', () => {
+          closeMenu();
+          self.showDataManagementModal();
+        });
+
+        document.getElementById('fabSeedData')?.addEventListener('click', async () => {
+          closeMenu();
+          const confirmed = await confirmDialog('seedHoshitoriData', {
+            title: '初期データ投入',
+            message: 'サンプルの初期データを投入しますか？\n（既にデータがある場合は投入されません）'
+          });
+          if (confirmed) {
+            try {
+              const result = await self.manager.seedInitialData();
+              if (result) { showToast('初期データを投入しました'); }
+              else { showToast('既にデータが存在するため、投入しませんでした'); }
+            }
+            catch (e) { self.showError('初期データの投入に失敗しました: ' + (e.code || e.message)); }
+          }
+        });
+
+        document.getElementById('fabResetConfirm')?.addEventListener('click', () => {
+          closeMenu();
+          resetConfirmSettings();
+        });
+
+        // Keyboard shortcuts (only when modal is active and admin)
+        modal.addEventListener('keydown', (e) => {
+          if (!self.manager.isAdmin) return;
+          if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+          const key = e.key.toLowerCase();
+          if (key === 'g') { e.preventDefault(); toggleMenu(); }
+          else if (key === 'escape' && menu.classList.contains('open')) { e.preventDefault(); e.stopPropagation(); closeMenu(); }
+          else if (menu.classList.contains('open')) {
+            if (key === 'c') { e.preventDefault(); document.getElementById('fabAddCategory')?.click(); }
+            else if (key === 't') { e.preventDefault(); document.getElementById('fabAddTask')?.click(); }
+            else if (key === 'd') { e.preventDefault(); document.getElementById('fabDataManage')?.click(); }
+            else if (key === 's') { e.preventDefault(); document.getElementById('fabSeedData')?.click(); }
+            else if (key === 'r') { e.preventDefault(); document.getElementById('fabResetConfirm')?.click(); }
+          }
+        });
       }
       showDataManagementModal() {
         const categories = this.manager.categories; let listHtml = '<div style="max-height: 300px; overflow-y: auto;">';
@@ -2945,6 +3200,7 @@
     // 星取管理表モーダルを開く
     async function openHoshitoriModal() {
       hoshitoriElements.modal.classList.add('active');
+      if (typeof onModalOpen === 'function') onModalOpen();
 
       if (!hoshitoriManager) {
         initHoshitori();
@@ -2979,6 +3235,7 @@
     // 星取管理表モーダルを閉じる
     function closeHoshitoriModal() {
       hoshitoriElements.modal.classList.remove('active');
+      if (typeof onModalClose === 'function') onModalClose();
       if (hoshitoriManager) {
         hoshitoriManager.unsubscribeFromData();
       }

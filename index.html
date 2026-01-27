@@ -4,14 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>星取進捗ダッシュボード</title>
-  <!-- TODO: meta description を適切な内容に更新してください -->
-  <meta name="description" content="">
-
   <!-- icons+meta start (managed) -->
   <!-- Favicon / Browser Icons -->
   <link rel="icon" href="/favicon.ico" sizes="16x16 32x32" type="image/x-icon">
-  <link rel="icon" href="/icon-32.png" sizes="32x32" type="image/png">
-  <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 
   <!-- Apple Touch Icons -->
   <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -20,29 +17,39 @@
 
   <!-- PWA -->
   <link rel="manifest" href="/site.webmanifest">
+  <meta name="application-name" content="星取進捗ダッシュボード">
+  <meta name="apple-mobile-web-app-title" content="星取進捗ダッシュボード">
   <meta name="theme-color" content="#0d1117">
   <meta name="format-detection" content="telephone=no">
+  <meta name="color-scheme" content="light">
 
   <!-- Windows -->
   <meta name="msapplication-TileColor" content="#0d1117">
 
-  <!-- Canonical URL -->
-  <!-- TODO: 本番ドメインに差し替えてください -->
+  <!-- Canonical -->
+  <!-- TODO: 本番ドメインに差し替え -->
   <link rel="canonical" href="https://example.com/">
 
-  <!-- OGP (Open Graph Protocol) -->
-  <!-- TODO: 本番ドメインに差し替えてください -->
+  <!-- SEO -->
+  <meta name="description" content="部門横断のタスク進捗を「絶/乱/循」の基準で可視化し、緊急・注意・順調を一目で把握できる社内ダッシュボード。Firebase認証/Firestoreでリアルタイム更新。">
+  <meta name="robots" content="index,follow">
+
+  <!-- OGP -->
+  <!-- TODO: SITE_URL を本番に変更 -->
+  <meta property="og:locale" content="ja_JP">
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="星取進捗ダッシュボード">
   <meta property="og:title" content="星取進捗ダッシュボード">
-  <meta property="og:description" content="">
+  <meta property="og:description" content="部門横断のタスク進捗を「絶/乱/循」の基準で可視化し、緊急・注意・順調を一目で把握できる社内ダッシュボード。Firebase認証/Firestoreでリアルタイム更新。">
   <meta property="og:url" content="https://example.com/">
+  <!-- NOTE: ogp.png が存在しないため og:image は省略 -->
 
-  <!-- Twitter Card -->
-  <!-- TODO: 本番ドメインに差し替えてください -->
+  <!-- Twitter -->
+  <!-- TODO: SITE_URL を本番に変更 -->
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="星取進捗ダッシュボード">
-  <meta name="twitter:description" content="">
+  <meta name="twitter:description" content="部門横断のタスク進捗を「絶/乱/循」の基準で可視化し、緊急・注意・順調を一目で把握できる社内ダッシュボード。Firebase認証/Firestoreでリアルタイム更新。">
+  <!-- NOTE: twitter-card.png が存在しないため twitter:image は省略 -->
   <!-- icons+meta end (managed) -->
 
   <style>
@@ -940,6 +947,211 @@
     .hoshitori-table { font-size: var(--font-size-xs); }
     .hoshitori-table th, .hoshitori-table td { padding: var(--space-xs) var(--space-sm); }
   }
+
+  /* ===================================================
+     Accessibility: Focus-visible for keyboard navigation
+  =================================================== */
+  .header-actions button:focus-visible,
+  .btn-icon:focus-visible,
+  .btn-admin:focus-visible,
+  .modal-close:focus-visible,
+  .login-close:focus-visible,
+  .btn-hoshitori-table:focus-visible,
+  .btn-hoshitori:focus-visible,
+  .btn-worklog:focus-visible,
+  .btn-login:focus-visible,
+  .btn-submit:focus-visible,
+  .btn-add-task:focus-visible,
+  .btn-row-action:focus-visible {
+    outline: 2px solid #0056CC;
+    outline-offset: 2px;
+  }
+
+  /* ===================================================
+     Accessibility: Reduced motion preference
+  =================================================== */
+  @media (prefers-reduced-motion: reduce) {
+    .loading-spinner {
+      animation: none;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* ===================================================
+     App Dialog & Toast Styles
+  =================================================== */
+  .app-dialog-overlay {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-modal);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+    padding: var(--space-lg);
+    backdrop-filter: blur(4px);
+  }
+  .app-dialog-container {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-xl);
+    padding: var(--space-xl);
+    width: 100%;
+    max-width: 400px;
+    box-shadow: var(--shadow-heavy);
+    position: relative;
+  }
+  .app-dialog-title {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    margin-bottom: var(--space-md);
+    color: var(--text-primary);
+  }
+  .app-dialog-message {
+    font-size: var(--font-size-base);
+    color: var(--text-primary);
+    margin-bottom: var(--space-lg);
+    line-height: 1.6;
+  }
+  .app-dialog-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 500;
+    margin-bottom: var(--space-xs);
+    color: var(--text-secondary);
+  }
+  .app-dialog-input {
+    width: 100%;
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-family: inherit;
+    margin-bottom: var(--space-sm);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .app-dialog-input:focus {
+    outline: none;
+    border-color: var(--color-jun);
+    box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+  }
+  .app-dialog-input.error {
+    border-color: var(--color-zetsu);
+  }
+  .app-dialog-error {
+    color: var(--color-zetsu);
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-sm);
+    display: none;
+  }
+  .app-dialog-error.show {
+    display: block;
+  }
+  .app-dialog-remember {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+  .app-dialog-remember input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+  }
+  .app-dialog-buttons {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+  }
+  .app-dialog-btn {
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+  }
+  .app-dialog-btn-cancel {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+  }
+  .app-dialog-btn-cancel:hover {
+    background: var(--bg-primary);
+  }
+  .app-dialog-btn-confirm {
+    background: linear-gradient(180deg, #007AFF 0%, #0056CC 100%);
+    color: white;
+    border-color: transparent;
+  }
+  .app-dialog-btn-confirm:hover {
+    opacity: 0.9;
+  }
+  .app-dialog-btn-danger {
+    background: linear-gradient(180deg, #FF3B30 0%, #CC2D26 100%);
+    color: white;
+    border-color: transparent;
+  }
+  .app-dialog-btn-danger:hover {
+    opacity: 0.9;
+  }
+  .app-dialog-btn:focus-visible {
+    outline: 2px solid #0056CC;
+    outline-offset: 2px;
+  }
+  .app-dialog-select-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .app-dialog-select-item {
+    padding: var(--space-sm) var(--space-md);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    text-align: left;
+    font-size: var(--font-size-base);
+    transition: all 0.2s ease;
+  }
+  .app-dialog-select-item:hover {
+    border-color: var(--color-jun);
+    background: rgba(0, 122, 255, 0.05);
+  }
+  .app-dialog-select-item:focus-visible {
+    outline: 2px solid #0056CC;
+    outline-offset: 2px;
+  }
+  .app-toast {
+    position: fixed;
+    bottom: var(--space-xl);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text-primary);
+    color: var(--bg-secondary);
+    padding: var(--space-sm) var(--space-lg);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+    box-shadow: var(--shadow-medium);
+    z-index: 4000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  .app-toast.show {
+    opacity: 1;
+  }
   </style>
 </head>
 <body>
@@ -966,8 +1178,8 @@
   <main class="main-content">
     <!-- 絶期限・乱期限ハイライト表示 -->
     <section id="mainHighlights" class="main-highlights">
-      <div class="loading">
-        <div class="loading-spinner"></div>
+      <div class="loading" role="status" aria-live="polite" aria-busy="true">
+        <div class="loading-spinner" aria-hidden="true"></div>
         <p>読み込み中...</p>
       </div>
     </section>
@@ -977,15 +1189,15 @@
        ダッシュボードモーダル - ①認：モーダル表示
   =================================================== -->
   <div class="modal-overlay" id="dashboardModal">
-    <div class="modal-container">
+    <div class="modal-container" role="dialog" aria-modal="true" aria-labelledby="dashboardTitle" tabindex="-1">
       <header class="modal-header">
-        <h2 class="modal-title">星取進捗ダッシュボード</h2>
-        <button class="modal-close" id="btnCloseDashboard">×</button>
+        <h2 class="modal-title" id="dashboardTitle">星取進捗ダッシュボード</h2>
+        <button type="button" class="modal-close" id="btnCloseDashboard" aria-label="閉じる">×</button>
       </header>
 
       <div class="modal-body" id="dashboardContent">
-        <div class="loading">
-          <div class="loading-spinner"></div>
+        <div class="loading" role="status" aria-live="polite" aria-busy="true">
+          <div class="loading-spinner" aria-hidden="true"></div>
           <p>読み込み中...</p>
         </div>
       </div>
@@ -1002,16 +1214,16 @@
        星取管理表モーダル - 業務担当一覧表
   =================================================== -->
   <div class="hoshitori-modal" id="hoshitoriModal">
-    <div class="hoshitori-container">
+    <div class="hoshitori-container" role="dialog" aria-modal="true" aria-labelledby="hoshitoriTitle" tabindex="-1">
       <header class="hoshitori-header">
-        <h2 class="hoshitori-title">星取管理表（業務担当一覧）</h2>
-        <button class="modal-close" id="btnCloseHoshitori">×</button>
+        <h2 class="hoshitori-title" id="hoshitoriTitle">星取管理表（業務担当一覧）</h2>
+        <button type="button" class="modal-close" id="btnCloseHoshitori" aria-label="閉じる">×</button>
       </header>
 
       <div class="hoshitori-body">
         <div class="hoshitori-table-wrapper" id="hoshitoriTableWrapper">
-          <div class="hoshitori-loading">
-            <div class="loading-spinner"></div>
+          <div class="hoshitori-loading" role="status" aria-live="polite" aria-busy="true">
+            <div class="loading-spinner" aria-hidden="true"></div>
             <p>読み込み中...</p>
           </div>
         </div>
@@ -1032,10 +1244,10 @@
        作業完了ログモーダル
   =================================================== -->
   <div class="worklog-modal" id="worklogModal">
-    <div class="worklog-container">
+    <div class="worklog-container" role="dialog" aria-modal="true" aria-labelledby="worklogTitle" tabindex="-1">
       <header class="worklog-header">
-        <h2 class="worklog-title">作業完了ログ</h2>
-        <button class="modal-close" id="btnCloseWorklog">×</button>
+        <h2 class="worklog-title" id="worklogTitle">作業完了ログ</h2>
+        <button type="button" class="modal-close" id="btnCloseWorklog" aria-label="閉じる">×</button>
       </header>
       <div class="worklog-body">
         <table class="worklog-table">
@@ -1054,9 +1266,9 @@
        ログインモーダル - ⑥許：認証
   =================================================== -->
   <div class="login-modal" id="loginModal">
-    <div class="login-container" style="position: relative;">
-      <button class="login-close" id="btnCloseLogin">×</button>
-      <h2 class="login-title">管理者ログイン</h2>
+    <div class="login-container" role="dialog" aria-modal="true" aria-labelledby="loginTitle" tabindex="-1" style="position: relative;">
+      <button type="button" class="login-close" id="btnCloseLogin" aria-label="閉じる">×</button>
+      <h2 class="login-title" id="loginTitle">管理者ログイン</h2>
       <form id="loginForm">
         <div class="form-group">
           <label class="form-label">メールアドレス</label>
@@ -1076,9 +1288,9 @@
        add: new-task modal with date picker
   =================================================== -->
   <div class="login-modal" id="newTaskModal">
-    <div class="login-container" style="position: relative;">
-      <button class="login-close" id="btnCloseNewTask">×</button>
-      <h2 class="login-title">新しいタスクを追加</h2>
+    <div class="login-container" role="dialog" aria-modal="true" aria-labelledby="newTaskModalTitle" tabindex="-1" style="position: relative;">
+      <button type="button" class="login-close" id="btnCloseNewTask" aria-label="閉じる">×</button>
+      <h2 class="login-title" id="newTaskModalTitle">新しいタスクを追加</h2>
       <form id="newTaskForm">
         <div class="form-group">
           <label class="form-label">タスク名（必須）</label>
@@ -1737,7 +1949,11 @@
         // 既に完了済み or disabled なら何もしない (idempotent)
         if (toBool(task.completed) || actionBtn.disabled) return;
 
-        if (!confirm(`「${task.title || '(無題)'}」を完了として登録しますか？`)) return;
+        const confirmed = await confirmDialog('completeTask', {
+          title: '完了登録',
+          message: `「${task.title || '(無題)'}」を完了登録しますか？`
+        });
+        if (!confirmed) return;
 
         actionBtn.disabled = true;
         try {
@@ -1753,11 +1969,16 @@
           }
         } catch (error) {
           console.error('Complete error:', error);
-          alert('完了登録に失敗しました: ' + (error.code || error.message));
+          showToast('完了登録に失敗しました: ' + (error.code || error.message));
           actionBtn.disabled = false;
         }
       } else if (action === 'delete') {
-        if (!confirm('このタスクを削除しますか？')) return;
+        const confirmed = await confirmDialog('deleteTask', {
+          title: 'タスク削除',
+          message: 'このタスクを削除しますか？',
+          danger: true
+        });
+        if (!confirmed) return;
 
         actionBtn.disabled = true;
         try {
@@ -1766,7 +1987,7 @@
           await renderMainHighlights();
         } catch (error) {
           console.error('Delete error:', error);
-          alert('削除に失敗しました: ' + (error.code || error.message));
+          showToast('削除に失敗しました: ' + (error.code || error.message));
           actionBtn.disabled = false;
         }
       }
@@ -1853,7 +2074,7 @@
       } catch (error) {
         console.error('Error adding task:', error);
         const msg = getFirestoreErrorMessage(error);
-        alert('タスクの追加に失敗しました: ' + msg + ' (' + error.code + ')');
+        showToast('タスクの追加に失敗しました: ' + msg + ' (' + error.code + ')');
       }
     }
 
@@ -1863,7 +2084,7 @@
       } catch (error) {
         console.error('Error updating task:', error);
         const msg = getFirestoreErrorMessage(error);
-        alert('タスクの更新に失敗しました: ' + msg + ' (' + error.code + ')');
+        showToast('タスクの更新に失敗しました: ' + msg + ' (' + error.code + ')');
       }
     }
 
@@ -1873,7 +2094,7 @@
       } catch (error) {
         console.error('Error deleting task:', error);
         const msg = getFirestoreErrorMessage(error);
-        alert('タスクの削除に失敗しました: ' + msg + ' (' + error.code + ')');
+        showToast('タスクの削除に失敗しました: ' + msg + ' (' + error.code + ')');
       }
     }
 
@@ -1927,7 +2148,7 @@
       } catch (error) {
         console.error('Error seeding data:', error);
         const msg = getFirestoreErrorMessage(error);
-        alert('初期データ投入に失敗しました: ' + msg + ' (' + error.code + ')');
+        showToast('初期データ投入に失敗しました: ' + msg + ' (' + error.code + ')');
       }
     }
 
@@ -2345,24 +2566,47 @@
             <button class="btn-admin" id="btnAddTaskGlobal">＋ タスク追加</button>
             <button class="btn-admin danger" id="btnManageData">データ管理</button>
             <button class="btn-admin" id="btnSeedData">初期データ投入</button>
+            <button class="btn-admin" id="btnResetConfirmSettings">確認設定リセット</button>
           </div>
         `;
         document.getElementById('btnAddCategory')?.addEventListener('click', async () => {
-          const title = prompt('大項目名を入力してください:'); if (title && title.trim()) { try { await this.manager.addCategory(title.trim()); } catch (e) { this.showError('大項目の追加に失敗しました: ' + (e.code || e.message)); } }
+          const title = await textInputDialog({ title: '大項目追加', label: '名称' });
+          if (title && title.trim()) {
+            try { await this.manager.addCategory(title.trim()); }
+            catch (e) { this.showError('大項目の追加に失敗しました: ' + (e.code || e.message)); }
+          }
         });
         document.getElementById('btnAddTaskGlobal')?.addEventListener('click', async () => {
-          const categories = this.manager.categories; if (categories.length === 0) { alert('先に大項目を追加してください'); return; }
-          const categoryOptions = categories.map((c, i) => `${i + 1}: ${c.title}`).join('\n');
-          const selectedIndex = prompt(`タスクを追加する大項目を選択してください（番号入力）:\n\n${categoryOptions}`);
-          if (!selectedIndex) return; const index = parseInt(selectedIndex) - 1; if (isNaN(index) || index < 0 || index >= categories.length) { alert('無効な選択です'); return; }
-          const taskName = prompt('タスク名を入力してください:'); if (taskName && taskName.trim()) { try { await this.manager.addTask(categories[index].id, taskName.trim()); } catch (e) { this.showError('タスクの追加に失敗しました: ' + (e.code || e.message)); } }
+          const categories = this.manager.categories;
+          if (categories.length === 0) { showToast('先に大項目を追加してください'); return; }
+          const selectedCategoryId = await selectDialog({
+            title: '追加先の大項目を選択',
+            items: categories.map((c, i) => ({ id: c.id, label: `${i + 1}: ${c.title}` }))
+          });
+          if (!selectedCategoryId) return;
+          const taskName = await textInputDialog({ title: 'タスク追加', label: '名称' });
+          if (taskName && taskName.trim()) {
+            try { await this.manager.addTask(selectedCategoryId, taskName.trim()); }
+            catch (e) { this.showError('タスクの追加に失敗しました: ' + (e.code || e.message)); }
+          }
         });
         document.getElementById('btnManageData')?.addEventListener('click', () => { this.showDataManagementModal(); });
         document.getElementById('btnSeedData')?.addEventListener('click', async () => {
-          if (confirm('サンプルの初期データを投入しますか？\n（既にデータがある場合は投入されません）')) {
-            try { const result = await this.manager.seedInitialData(); if (result) { alert('初期データを投入しました'); } else { alert('既にデータが存在するため、投入しませんでした'); } }
+          const confirmed = await confirmDialog('seedHoshitoriData', {
+            title: '初期データ投入',
+            message: 'サンプルの初期データを投入しますか？\n（既にデータがある場合は投入されません）'
+          });
+          if (confirmed) {
+            try {
+              const result = await this.manager.seedInitialData();
+              if (result) { showToast('初期データを投入しました'); }
+              else { showToast('既にデータが存在するため、投入しませんでした'); }
+            }
             catch (e) { this.showError('初期データの投入に失敗しました: ' + (e.code || e.message)); }
           }
+        });
+        document.getElementById('btnResetConfirmSettings')?.addEventListener('click', () => {
+          resetConfirmSettings();
         });
       }
       showDataManagementModal() {
@@ -2413,20 +2657,30 @@
               switch (action) {
                 case 'edit-category': {
                   const cat = this.manager.categories.find(c => c.id === categoryId);
-                  const newTitle = prompt('大項目名を入力:', cat?.title || '');
+                  const newTitle = await textInputDialog({ title: '大項目編集', label: '名称', defaultValue: cat?.title || '' });
                   if (newTitle && newTitle.trim()) { await this.manager.updateCategoryTitle(categoryId, newTitle.trim()); overlay.remove(); }
                   break; }
                 case 'delete-category': {
-                  if (confirm('この大項目と配下のタスクをすべて削除しますか？')) { await this.manager.deleteCategory(categoryId); overlay.remove(); }
+                  const confirmed = await confirmDialog('deleteCategory', {
+                    title: '大項目削除',
+                    message: 'この大項目と配下のタスクをすべて削除しますか？',
+                    danger: true
+                  });
+                  if (confirmed) { await this.manager.deleteCategory(categoryId); overlay.remove(); }
                   break; }
                 case 'edit-task': {
                   const category = this.manager.categories.find(c => c.id === categoryId);
                   const task = category?.tasks?.find(t => t.id === taskId);
-                  const newName = prompt('タスク名を入力:', task?.name || '');
+                  const newName = await textInputDialog({ title: 'タスク編集', label: '名称', defaultValue: task?.name || '' });
                   if (newName && newName.trim()) { await this.manager.updateTaskName(categoryId, taskId, newName.trim()); overlay.remove(); }
                   break; }
                 case 'delete-task': {
-                  if (confirm('このタスクを削除しますか？')) { await this.manager.deleteTask(categoryId, taskId); overlay.remove(); }
+                  const confirmed = await confirmDialog('deleteHoshitoriTask', {
+                    title: 'タスク削除',
+                    message: 'このタスクを削除しますか？',
+                    danger: true
+                  });
+                  if (confirmed) { await this.manager.deleteTask(categoryId, taskId); overlay.remove(); }
                   break; }
               }
             } catch (e) { this.showError('操作に失敗しました: ' + (e.code || e.message)); }
@@ -2453,7 +2707,7 @@
         });
         this.elements.logContainer.innerHTML = html;
       }
-      showError(message) { alert(message); }
+      showError(message) { showToast(message); }
       escapeHtml(str) { if (!str) return ''; return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#039;'); }
     }
 
@@ -2543,6 +2797,282 @@
         }
       }
     });
+
+    // ===================================================
+    // App Dialog Utilities - prompt/confirm/alert 置換用
+    // ===================================================
+
+    // ダイアログルートの初期化（冪等）
+    function getDialogRoot() {
+      let root = document.getElementById('appDialogRoot');
+      if (!root) {
+        root = document.createElement('div');
+        root.id = 'appDialogRoot';
+        document.body.appendChild(root);
+      }
+      return root;
+    }
+
+    // トースト表示
+    function showToast(msg, ms = 2500) {
+      const existing = document.querySelector('.app-toast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.className = 'app-toast';
+      toast.setAttribute('role', 'status');
+      toast.setAttribute('aria-live', 'polite');
+      toast.textContent = msg;
+      document.body.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.add('show');
+      });
+
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+      }, ms);
+    }
+
+    // フォーカストラップ
+    function trapFocus(container) {
+      const focusable = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      function handleTab(e) {
+        if (e.key !== 'Tab') return;
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+      container.addEventListener('keydown', handleTab);
+      return () => container.removeEventListener('keydown', handleTab);
+    }
+
+    // 確認ダイアログ
+    async function confirmDialog(key, { title, message, confirmText = 'OK', cancelText = 'キャンセル', remember = true, danger = false }) {
+      // suppress check
+      if (remember && localStorage.getItem('confirm.suppress.' + key) === '1') {
+        showToast('確認をスキップ中（設定でリセット可）', 1500);
+        return true;
+      }
+
+      return new Promise((resolve) => {
+        const root = getDialogRoot();
+        const dialogId = 'appConfirmDialog_' + Date.now();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'app-dialog-overlay';
+        overlay.innerHTML = `
+          <div class="app-dialog-container" role="dialog" aria-modal="true" aria-labelledby="${dialogId}_title" tabindex="-1">
+            <h3 class="app-dialog-title" id="${dialogId}_title">${escapeHtml(title)}</h3>
+            <p class="app-dialog-message">${escapeHtml(message)}</p>
+            ${remember ? `
+              <label class="app-dialog-remember">
+                <input type="checkbox" id="${dialogId}_remember">
+                次回から確認しない
+              </label>
+            ` : ''}
+            <div class="app-dialog-buttons">
+              <button type="button" class="app-dialog-btn app-dialog-btn-cancel" id="${dialogId}_cancel">${escapeHtml(cancelText)}</button>
+              <button type="button" class="app-dialog-btn ${danger ? 'app-dialog-btn-danger' : 'app-dialog-btn-confirm'}" id="${dialogId}_confirm">${escapeHtml(confirmText)}</button>
+            </div>
+          </div>
+        `;
+
+        root.appendChild(overlay);
+
+        const container = overlay.querySelector('.app-dialog-container');
+        const confirmBtn = document.getElementById(dialogId + '_confirm');
+        const cancelBtn = document.getElementById(dialogId + '_cancel');
+        const rememberCheck = document.getElementById(dialogId + '_remember');
+
+        const removeTrap = trapFocus(container);
+        confirmBtn.focus();
+
+        function close(result) {
+          if (result && remember && rememberCheck && rememberCheck.checked) {
+            localStorage.setItem('confirm.suppress.' + key, '1');
+          }
+          removeTrap();
+          overlay.remove();
+          resolve(result);
+        }
+
+        confirmBtn.addEventListener('click', () => close(true));
+        cancelBtn.addEventListener('click', () => close(false));
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) close(false);
+        });
+        container.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close(false);
+        });
+      });
+    }
+
+    // テキスト入力ダイアログ
+    async function textInputDialog({ title, label, placeholder = '', defaultValue = '', required = true, validator = null }) {
+      return new Promise((resolve) => {
+        const root = getDialogRoot();
+        const dialogId = 'appTextInputDialog_' + Date.now();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'app-dialog-overlay';
+        overlay.innerHTML = `
+          <div class="app-dialog-container" role="dialog" aria-modal="true" aria-labelledby="${dialogId}_title" tabindex="-1">
+            <h3 class="app-dialog-title" id="${dialogId}_title">${escapeHtml(title)}</h3>
+            <label class="app-dialog-label" for="${dialogId}_input">${escapeHtml(label)}</label>
+            <input type="text" class="app-dialog-input" id="${dialogId}_input" placeholder="${escapeHtml(placeholder)}" value="${escapeHtml(defaultValue)}">
+            <p class="app-dialog-error" id="${dialogId}_error"></p>
+            <div class="app-dialog-buttons">
+              <button type="button" class="app-dialog-btn app-dialog-btn-cancel" id="${dialogId}_cancel">キャンセル</button>
+              <button type="button" class="app-dialog-btn app-dialog-btn-confirm" id="${dialogId}_confirm">OK</button>
+            </div>
+          </div>
+        `;
+
+        root.appendChild(overlay);
+
+        const container = overlay.querySelector('.app-dialog-container');
+        const input = document.getElementById(dialogId + '_input');
+        const errorEl = document.getElementById(dialogId + '_error');
+        const confirmBtn = document.getElementById(dialogId + '_confirm');
+        const cancelBtn = document.getElementById(dialogId + '_cancel');
+
+        const removeTrap = trapFocus(container);
+        input.focus();
+        input.select();
+
+        function close(value) {
+          removeTrap();
+          overlay.remove();
+          resolve(value);
+        }
+
+        function tryConfirm() {
+          const value = input.value.trim();
+          if (required && !value) {
+            input.classList.add('error');
+            errorEl.textContent = '入力してください';
+            errorEl.classList.add('show');
+            input.focus();
+            return;
+          }
+          if (validator) {
+            const validationResult = validator(value);
+            if (validationResult !== true) {
+              input.classList.add('error');
+              errorEl.textContent = typeof validationResult === 'string' ? validationResult : '入力が無効です';
+              errorEl.classList.add('show');
+              input.focus();
+              return;
+            }
+          }
+          close(value);
+        }
+
+        input.addEventListener('input', () => {
+          input.classList.remove('error');
+          errorEl.classList.remove('show');
+        });
+
+        input.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            tryConfirm();
+          }
+        });
+
+        confirmBtn.addEventListener('click', tryConfirm);
+        cancelBtn.addEventListener('click', () => close(null));
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) close(null);
+        });
+        container.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close(null);
+        });
+      });
+    }
+
+    // 選択ダイアログ
+    async function selectDialog({ title, items }) {
+      return new Promise((resolve) => {
+        const root = getDialogRoot();
+        const dialogId = 'appSelectDialog_' + Date.now();
+
+        const itemsHtml = items.map((item, idx) => `
+          <button type="button" class="app-dialog-select-item" data-id="${escapeHtml(item.id)}" data-index="${idx}">
+            ${escapeHtml(item.label)}
+          </button>
+        `).join('');
+
+        const overlay = document.createElement('div');
+        overlay.className = 'app-dialog-overlay';
+        overlay.innerHTML = `
+          <div class="app-dialog-container" role="dialog" aria-modal="true" aria-labelledby="${dialogId}_title" tabindex="-1">
+            <h3 class="app-dialog-title" id="${dialogId}_title">${escapeHtml(title)}</h3>
+            <div class="app-dialog-select-list">
+              ${itemsHtml}
+            </div>
+            <div class="app-dialog-buttons">
+              <button type="button" class="app-dialog-btn app-dialog-btn-cancel" id="${dialogId}_cancel">キャンセル</button>
+            </div>
+          </div>
+        `;
+
+        root.appendChild(overlay);
+
+        const container = overlay.querySelector('.app-dialog-container');
+        const cancelBtn = document.getElementById(dialogId + '_cancel');
+        const selectItems = container.querySelectorAll('.app-dialog-select-item');
+
+        const removeTrap = trapFocus(container);
+        if (selectItems.length > 0) selectItems[0].focus();
+
+        function close(value) {
+          removeTrap();
+          overlay.remove();
+          resolve(value);
+        }
+
+        selectItems.forEach(btn => {
+          btn.addEventListener('click', () => {
+            close(btn.dataset.id);
+          });
+        });
+
+        cancelBtn.addEventListener('click', () => close(null));
+        overlay.addEventListener('click', (e) => {
+          if (e.target === overlay) close(null);
+        });
+        container.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') close(null);
+        });
+      });
+    }
+
+    // 確認設定リセット
+    function resetConfirmSettings() {
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('confirm.suppress.')) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      showToast('確認設定をリセットしました');
+    }
   </script>
 </body>
 </html>

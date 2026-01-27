@@ -916,7 +916,7 @@
   .hoshitori-table tr.category-row { background: #E5E5EA; }
   .hoshitori-table tr.category-row td { font-weight: 600; text-align: left; padding-left: var(--space-md); }
   .hoshitori-table tr.category-row td:first-child { display: flex; align-items: center; gap: var(--space-sm); }
-  .hoshitori-table tr.task-row td:first-child { text-align: left; padding-left: var(--space-xl); }
+  .hoshitori-table tr.task-row td:first-child { text-align: left; padding-left: var(--space-xl); display: flex; align-items: center; gap: var(--space-sm); }
   .owner-cell { cursor: default; transition: all 0.2s ease; user-select: none; min-height: 40px; }
   .owner-cell.editable { cursor: pointer; }
   .owner-cell.editable:hover { background: rgba(0, 122, 255, 0.1); }
@@ -941,6 +941,17 @@
   .hoshitori-footer { padding: var(--space-md) var(--space-lg); border-top: 1px solid var(--border-color); font-size: var(--font-size-xs); color: var(--text-secondary); text-align: center; flex-shrink: 0; display: flex; justify-content: space-between; align-items: center; }
   .hoshitori-loading { text-align: center; padding: var(--space-xl); color: var(--text-secondary); }
   .hoshitori-empty { text-align: center; padding: var(--space-xl); color: var(--text-secondary); }
+
+  /* Drag & Drop Sorting */
+  .drag-handle { cursor: grab; padding: 4px 8px; color: var(--text-secondary); user-select: none; touch-action: none; display: none; }
+  .admin-mode .drag-handle { display: inline-flex; align-items: center; }
+  .drag-handle:hover { color: var(--text-primary); }
+  .drag-handle:active { cursor: grabbing; }
+  .drag-handle svg { width: 16px; height: 16px; pointer-events: none; }
+  .hoshitori-table tr.dragging { opacity: 0.5; background: #d0e8ff !important; }
+  .hoshitori-table tr.drop-target-above td { box-shadow: inset 0 2px 0 0 var(--color-jun); }
+  .hoshitori-table tr.drop-target-below td { box-shadow: inset 0 -2px 0 0 var(--color-jun); }
+  .hoshitori-table tr.reorder-focus td:first-child { outline: 2px solid var(--color-jun); outline-offset: -2px; }
   @media (max-width: 640px) {
     .hoshitori-container { max-height: 100vh; border-radius: 0; }
     .hoshitori-body { padding: var(--space-md); }
@@ -2502,6 +2513,36 @@
           return true;
         } catch (e) { console.error('Error seeding hoshitori data:', e); throw e; }
       }
+      async reorderCategories(categoryIdsInOrder) {
+        if (!this.isAdmin) return false;
+        const { doc, writeBatch } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        try {
+          const batch = writeBatch(this.db);
+          categoryIdsInOrder.forEach((id, index) => {
+            const ref = doc(this.db, 'hoshitori_projects', PROJECT_ID, 'hoshitori', id);
+            batch.update(ref, { order: index + 1, updatedAt: new Date().toISOString() });
+          });
+          await batch.commit();
+          await this.logOperation('REORDER_CATEGORIES', { newOrder: categoryIdsInOrder });
+          return true;
+        } catch (e) { console.error('Error reordering categories:', e); throw e; }
+      }
+      async reorderTasks(categoryId, taskIdsInOrder) {
+        if (!this.isAdmin) return false;
+        const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+        try {
+          const category = this.categories.find(c => c.id === categoryId);
+          if (!category) return false;
+          const taskMap = new Map((category.tasks || []).map(t => [t.id, t]));
+          const reorderedTasks = taskIdsInOrder.map(id => taskMap.get(id)).filter(Boolean);
+          await updateDoc(
+            doc(this.db, 'hoshitori_projects', PROJECT_ID, 'hoshitori', categoryId),
+            { tasks: reorderedTasks, updatedAt: new Date().toISOString() }
+          );
+          await this.logOperation('REORDER_TASKS', { categoryId, newOrder: taskIdsInOrder });
+          return true;
+        } catch (e) { console.error('Error reordering tasks:', e); throw e; }
+      }
     }
 
     class HoshitoriUI {
@@ -2521,16 +2562,17 @@
             </thead>
             <tbody>
         `;
+        const dragHandleSvg = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>`;
         categories.forEach(category => {
           html += `
-            <tr class="category-row" data-category-id="${category.id}">
-              <td colspan="${MEMBER_KEYS.length + 1}" class="category-cell"><span class="category-title">${this.escapeHtml(category.title)}</span></td>
+            <tr class="category-row" data-category-id="${category.id}" tabindex="0">
+              <td colspan="${MEMBER_KEYS.length + 1}" class="category-cell"><span class="drag-handle" data-drag-type="category">${dragHandleSvg}</span><span class="category-title">${this.escapeHtml(category.title)}</span></td>
             </tr>
           `;
           (category.tasks || []).forEach(task => {
             html += `
-              <tr class="task-row" data-category-id="${category.id}" data-task-id="${task.id}">
-                <td class="task-name-cell"><span class="task-name">${this.escapeHtml(task.name)}</span></td>
+              <tr class="task-row" data-category-id="${category.id}" data-task-id="${task.id}" tabindex="0">
+                <td class="task-name-cell"><span class="drag-handle" data-drag-type="task">${dragHandleSvg}</span><span class="task-name">${this.escapeHtml(task.name)}</span></td>
                 ${MEMBER_KEYS.map(key => `
                   <td class="owner-cell ${isAdmin ? 'editable' : ''}" data-category-id="${category.id}" data-task-id="${task.id}" data-member="${key}">
                     <span class="owner-mark ${task.owners && task.owners[key] ? 'active' : ''}">${task.owners && task.owners[key] ? '○' : ''}</span>
@@ -2543,6 +2585,7 @@
         html += `</tbody></table>`;
         this.elements.tableWrapper.innerHTML = html;
         this.setupTableEventListeners();
+        this.enableSorting();
       }
       setupTableEventListeners() {
         const table = this.elements.tableWrapper.querySelector('.hoshitori-table'); if (!table) return;
@@ -2554,6 +2597,168 @@
             try { await this.manager.toggleOwner(categoryId, taskId, memberKey); }
             catch (e) { mark.classList.toggle('active', currentState); mark.textContent = currentState ? '○' : ''; this.showError('担当の変更に失敗しました: ' + (e.code || e.message)); }
           });
+        });
+      }
+      enableSorting() {
+        if (!this.manager.isAdmin) return;
+        const table = this.elements.tableWrapper.querySelector('.hoshitori-table');
+        if (!table) return;
+        const tbody = table.querySelector('tbody');
+        if (!tbody) return;
+
+        let draggedRow = null;
+        let dragType = null;
+        let dragCategoryId = null;
+        let longPressTimer = null;
+        let isDragging = false;
+
+        const clearDropTargets = () => {
+          tbody.querySelectorAll('.drop-target-above, .drop-target-below').forEach(el => {
+            el.classList.remove('drop-target-above', 'drop-target-below');
+          });
+        };
+
+        const getTargetRow = (y, type, categoryId) => {
+          const rows = type === 'category'
+            ? [...tbody.querySelectorAll('.category-row')]
+            : [...tbody.querySelectorAll(`.task-row[data-category-id="${categoryId}"]`)];
+          for (const row of rows) {
+            const rect = row.getBoundingClientRect();
+            if (y >= rect.top && y <= rect.bottom) {
+              return { row, position: y < rect.top + rect.height / 2 ? 'above' : 'below' };
+            }
+          }
+          return null;
+        };
+
+        const finishDrag = async (targetRow, position) => {
+          if (!draggedRow || !targetRow || draggedRow === targetRow.row) {
+            cleanup();
+            return;
+          }
+          try {
+            if (dragType === 'category') {
+              const rows = [...tbody.querySelectorAll('.category-row')];
+              const fromIndex = rows.indexOf(draggedRow);
+              let toIndex = rows.indexOf(targetRow.row);
+              if (position === 'below') toIndex++;
+              if (fromIndex < toIndex) toIndex--;
+              rows.splice(fromIndex, 1);
+              rows.splice(toIndex, 0, draggedRow);
+              const newOrder = rows.map(r => r.dataset.categoryId);
+              await this.manager.reorderCategories(newOrder);
+            } else {
+              const rows = [...tbody.querySelectorAll(`.task-row[data-category-id="${dragCategoryId}"]`)];
+              const fromIndex = rows.indexOf(draggedRow);
+              let toIndex = rows.indexOf(targetRow.row);
+              if (position === 'below') toIndex++;
+              if (fromIndex < toIndex) toIndex--;
+              rows.splice(fromIndex, 1);
+              rows.splice(toIndex, 0, draggedRow);
+              const newOrder = rows.map(r => r.dataset.taskId);
+              await this.manager.reorderTasks(dragCategoryId, newOrder);
+            }
+          } catch (e) {
+            this.showError('並び替えに失敗しました: ' + (e.code || e.message));
+          }
+          cleanup();
+        };
+
+        const cleanup = () => {
+          if (draggedRow) draggedRow.classList.remove('dragging');
+          clearDropTargets();
+          draggedRow = null;
+          dragType = null;
+          dragCategoryId = null;
+          isDragging = false;
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        };
+
+        // Pointer events for drag handles
+        tbody.addEventListener('pointerdown', (e) => {
+          const handle = e.target.closest('.drag-handle');
+          if (!handle) return;
+          const row = handle.closest('tr');
+          if (!row) return;
+          e.preventDefault();
+          dragType = handle.dataset.dragType;
+          dragCategoryId = row.dataset.categoryId;
+
+          const startDrag = () => {
+            draggedRow = row;
+            isDragging = true;
+            row.classList.add('dragging');
+            row.setPointerCapture(e.pointerId);
+          };
+
+          // Mobile: long press (300ms), PC: immediate
+          if (e.pointerType === 'touch') {
+            longPressTimer = setTimeout(startDrag, 300);
+          } else {
+            startDrag();
+          }
+        });
+
+        tbody.addEventListener('pointermove', (e) => {
+          if (longPressTimer && e.pointerType === 'touch') {
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+          if (!isDragging || !draggedRow) return;
+          e.preventDefault();
+          clearDropTargets();
+          const target = getTargetRow(e.clientY, dragType, dragCategoryId);
+          if (target && target.row !== draggedRow) {
+            target.row.classList.add(target.position === 'above' ? 'drop-target-above' : 'drop-target-below');
+          }
+        });
+
+        tbody.addEventListener('pointerup', async (e) => {
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+          if (!isDragging || !draggedRow) return;
+          const target = getTargetRow(e.clientY, dragType, dragCategoryId);
+          await finishDrag(target, target?.position);
+        });
+
+        tbody.addEventListener('pointercancel', cleanup);
+
+        // Keyboard support: Alt + Arrow keys
+        tbody.addEventListener('keydown', async (e) => {
+          if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+          const row = e.target.closest('tr.category-row, tr.task-row');
+          if (!row) return;
+          e.preventDefault();
+
+          const isCategory = row.classList.contains('category-row');
+          const categoryId = row.dataset.categoryId;
+          const direction = e.key === 'ArrowUp' ? -1 : 1;
+
+          row.classList.add('reorder-focus');
+          setTimeout(() => row.classList.remove('reorder-focus'), 300);
+
+          try {
+            if (isCategory) {
+              const rows = [...tbody.querySelectorAll('.category-row')];
+              const index = rows.indexOf(row);
+              const newIndex = index + direction;
+              if (newIndex < 0 || newIndex >= rows.length) return;
+              rows.splice(index, 1);
+              rows.splice(newIndex, 0, row);
+              const newOrder = rows.map(r => r.dataset.categoryId);
+              await this.manager.reorderCategories(newOrder);
+            } else {
+              const rows = [...tbody.querySelectorAll(`.task-row[data-category-id="${categoryId}"]`)];
+              const index = rows.indexOf(row);
+              const newIndex = index + direction;
+              if (newIndex < 0 || newIndex >= rows.length) return;
+              rows.splice(index, 1);
+              rows.splice(newIndex, 0, row);
+              const newOrder = rows.map(r => r.dataset.taskId);
+              await this.manager.reorderTasks(categoryId, newOrder);
+            }
+          } catch (err) {
+            this.showError('並び替えに失敗しました: ' + (err.code || err.message));
+          }
         });
       }
       renderAdminPanel() {

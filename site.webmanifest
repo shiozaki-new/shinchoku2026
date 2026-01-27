@@ -1,7 +1,7 @@
 {
   "name": "星取進捗ダッシュボード",
   "short_name": "星取進捗",
-  "description": "",
+  "description": "部門横断のタスク進捗を可視化し、緊急・注意・順調を一目で把握できる社内ダッシュボード。Firebase認証/Firestoreでリアルタイム更新。",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

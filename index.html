@@ -1799,7 +1799,7 @@
     // 画面上部：絶期限 → 乱期限（最優先で可視化）
     // その下：期限ありタスク一覧（循・乱混在、色で判別）
     // ===================================================
-    async function renderDashboard() {
+    async function renderDashboard(skipFetch = false) {
       elements.dashboardContent.innerHTML = `
         <div class="loading">
           <div class="loading-spinner"></div>
@@ -1807,7 +1807,7 @@
         </div>
       `;
 
-      await fetchTasks();
+      if (!skipFetch) await fetchTasks();
 
       // 期限ありタスクのみフィルタ - ③衡：期限なしタスクは表示しない
       const tasksWithDeadline = tasks.filter(t => t.deadline);
@@ -1888,11 +1888,11 @@
     // ===================================================
     // メインハイライト表示 - 絶期限・乱期限・循期限を常時表示
     // ===================================================
-    async function renderMainHighlights() {
+    async function renderMainHighlights(skipFetch = false) {
       if (!elements.mainHighlights) return;
 
       try {
-        await fetchTasks();
+        if (!skipFetch) await fetchTasks();
 
         const tasksWithDeadline = tasks.filter(t => t.deadline);
         const zetsuTasks = [];
@@ -2494,10 +2494,11 @@
 
         try {
           await updateTask(taskId, { priority: newPriority });
-          task.priority = newPriority; // キャッシュ更新
+          // Firestoreから最新データを1回だけ取得し、その後はキャッシュを使用
+          await fetchTasks();
           showToast(`「${task.title || '(無題)'}」を${priorityLabels[newPriority]}に設定`);
-          await renderDashboard();
-          await renderMainHighlights();
+          await renderDashboard(true);  // skipFetch=true: キャッシュ使用
+          await renderMainHighlights(true);  // skipFetch=true: キャッシュ使用
         } catch (error) {
           console.error('Priority update error:', error);
           showToast('優先度の更新に失敗しました: ' + (error.code || error.message));

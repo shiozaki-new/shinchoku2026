@@ -999,6 +999,100 @@
   .hoshitori-table tr.drop-target-below td { box-shadow: inset 0 -2px 0 0 var(--color-jun); }
   .hoshitori-table tr.reorder-focus td:first-child { outline: 2px solid var(--color-jun); outline-offset: -2px; }
 
+  /* Dashboard Task Card Drag & Drop Sorting */
+  .task-card.dragging { opacity: .6; background: #eef6ff; }
+  .task-card.drop-target-above { box-shadow: inset 0 2px 0 0 var(--color-jun); }
+  .task-card.drop-target-below { box-shadow: inset 0 -2px 0 0 var(--color-jun); }
+  .task-card .drag-handle { margin-right: var(--space-sm); }
+  /* メインダッシュボード（トップページ）ではドラッグハンドル非表示 */
+  .main-highlights .task-card .drag-handle { display: none !important; }
+
+  /* ===================================================
+     優先度キラキラエフェクト（枠線だけがキラキラ流れる）
+     priority: 3=最重要(虹), 2=重要(金), 1=優先(銀), 0=普通
+     グラデーション背景を流し、内側に白背景を重ねて枠だけキラキラ
+  =================================================== */
+  @keyframes border-flow {
+    0% { background-position: 0% 50%; }
+    100% { background-position: 200% 50%; }
+  }
+
+  /* 優先度付きカードの共通設定 */
+  .task-card.priority-1,
+  .task-card.priority-2,
+  .task-card.priority-3 {
+    position: relative;
+    border: none !important;
+    padding: calc(var(--space-md) + 4px);
+    background-size: 200% 200%;
+  }
+  /* 内側のコンテンツはz-index上げる */
+  .task-card.priority-1 > *,
+  .task-card.priority-2 > *,
+  .task-card.priority-3 > * {
+    position: relative;
+    z-index: 1;
+  }
+  /* 内側の白背景（エフェクトなし） */
+  .task-card.priority-1::after,
+  .task-card.priority-2::after,
+  .task-card.priority-3::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    right: 4px;
+    bottom: 4px;
+    background: #ffffff;
+    border-radius: calc(var(--radius-md) - 2px);
+    z-index: 0;
+  }
+
+  /* 優先（銀色キラキラ枠） - priority-1 */
+  .task-card.priority-1 {
+    background: linear-gradient(90deg, #a0a0a0, #d8d8d8, #ffffff, #d8d8d8, #a0a0a0, #c0c0c0, #ffffff, #a0a0a0);
+    background-size: 200% 200%;
+    animation: border-flow 3s linear infinite;
+  }
+
+  /* 重要（金色キラキラ枠） - priority-2 */
+  .task-card.priority-2 {
+    background: linear-gradient(90deg, #b8860b, #ffd700, #fffacd, #ffd700, #ff8c00, #ffd700, #fffacd, #b8860b);
+    background-size: 200% 200%;
+    animation: border-flow 2.5s linear infinite;
+  }
+
+  /* 最重要（虹色キラキラ枠） - priority-3 */
+  .task-card.priority-3 {
+    background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd, #ff6b6b, #feca57, #48dbfb);
+    background-size: 300% 300%;
+    animation: border-flow 2s linear infinite;
+  }
+
+  /* 優先度ボタン */
+  .btn-priority {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: transparent;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    color: var(--text-secondary);
+  }
+  .btn-priority:hover {
+    background: var(--bg-secondary);
+    transform: scale(1.1);
+  }
+  .btn-priority[data-priority="0"] { color: var(--text-secondary); }
+  .btn-priority[data-priority="1"] { color: #a0a0a0; }
+  .btn-priority[data-priority="2"] { color: #ffd700; }
+  .btn-priority[data-priority="3"] { color: #ff6b6b; }
+
   /* Floating Admin Bar (FAB) */
   .admin-fab {
     position: fixed;
@@ -1621,6 +1715,30 @@
     }
 
     // ===================================================
+    // タスク並び替え用比較関数 - priority → manualOrder → deadline
+    // ===================================================
+    function orderKey(t) {
+      return (typeof t.manualOrder === 'number') ? t.manualOrder : Number.MAX_SAFE_INTEGER;
+    }
+
+    function compareTasks(a, b) {
+      // 1. priority降順（3=最重要が先頭）
+      const pa = typeof a.priority === 'number' ? a.priority : 0;
+      const pb = typeof b.priority === 'number' ? b.priority : 0;
+      if (pa !== pb) return pb - pa; // 降順
+
+      // 2. manualOrder昇順
+      const oa = orderKey(a), ob = orderKey(b);
+      if (oa !== ob) return oa - ob;
+
+      // 3. deadline昇順
+      if (a.deadline && b.deadline) return new Date(a.deadline) - new Date(b.deadline);
+      if (a.deadline && !b.deadline) return -1;
+      if (!a.deadline && b.deadline) return 1;
+      return (a.title || '').localeCompare(b.title || '');
+    }
+
+    // ===================================================
     // 分類ロジック - ②理：期限ステータス判定
     // 新ルール（優先順位順）:
     //   絶: 残り5日以内 かつ 進捗≤70%
@@ -1664,7 +1782,9 @@
           return {
             id: docu.id,
             ...d,
-            completed: toBool(d.completed) // 型ブレ正規化
+            completed: toBool(d.completed), // 型ブレ正規化
+            manualOrder: typeof d.manualOrder === 'number' ? d.manualOrder : null,
+            priority: typeof d.priority === 'number' ? d.priority : 0 // 0=普通, 1=優先, 2=重要, 3=最重要
           };
         });
         return tasks;
@@ -1705,11 +1825,10 @@
         else junTasks.push(task);
       });
 
-      // 並び替え（期限が近い順）
-      const sortByDeadline = (a, b) => new Date(a.deadline) - new Date(b.deadline);
-      zetsuTasks.sort(sortByDeadline);
-      ranTasks.sort(sortByDeadline);
-      junTasks.sort(sortByDeadline);
+      // 並び替え（manualOrder優先、次に期限が近い順）
+      zetsuTasks.sort(compareTasks);
+      ranTasks.sort(compareTasks);
+      junTasks.sort(compareTasks);
 
       let html = '';
 
@@ -1788,10 +1907,10 @@
           else if (status === 'jun') junTasks.push(task); // add: 循期限
         });
 
-        const sortByDeadline = (a, b) => new Date(a.deadline) - new Date(b.deadline);
-        zetsuTasks.sort(sortByDeadline);
-        ranTasks.sort(sortByDeadline);
-        junTasks.sort(sortByDeadline); // add: 循期限
+        // 並び替え（manualOrder優先、次に期限が近い順）
+        zetsuTasks.sort(compareTasks);
+        ranTasks.sort(compareTasks);
+        junTasks.sort(compareTasks); // add: 循期限
 
         let html = '';
 
@@ -1933,10 +2052,22 @@
       }
 
       // ⑥許：管理者のみ編集可能なUIを表示
+      // ドラッグハンドルSVG（星取と同じ）
+      const dragHandleSvg = `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm8-16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm0 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/></svg>`;
+
+      // 優先度クラス
+      const priority = typeof task.priority === 'number' ? task.priority : 0;
+      const priorityClass = priority > 0 ? ` priority-${priority}` : '';
+      // 優先度ボタンのアイコン
+      const priorityIcons = ['⚪', '☆', '⭐', '🌈'];
+      const priorityLabels = ['普通', '優先', '重要', '最重要'];
+
       if (isAdmin) {
         return `
-          <div class="task-card ${status}" data-id="${task.id}">
+          <div class="task-card ${status}${priorityClass}" data-id="${task.id}" data-priority="${priority}">
             <div class="task-header">
+              <span class="drag-handle" data-drag-type="dash-task" title="並び替えハンドル" aria-label="並び替え">${dragHandleSvg}</span>
+              <button type="button" class="btn-priority" data-action="toggle-priority" data-priority="${priority}" title="${priorityLabels[priority]}（クリックで変更）">${priorityIcons[priority]}</button>
               <input type="text" class="task-title-input" value="${escapeHtml(task.title)}" data-field="title">
               <input type="date" class="task-deadline-input" value="${task.deadline || ''}" data-field="deadline">
               <div class="task-actions">
@@ -1954,9 +2085,9 @@
           </div>
         `;
       } else {
-        // 閲覧モード：編集不可
+        // 閲覧モード：編集不可（優先度エフェクトは表示）
         return `
-          <div class="task-card ${status}" data-id="${task.id}">
+          <div class="task-card ${status}${priorityClass}" data-id="${task.id}" data-priority="${priority}">
             <div class="task-header">
               <span class="task-title">${escapeHtml(task.title)}</span>
               <span class="task-deadline">${deadlineStr}</span>
@@ -2043,6 +2174,208 @@
           openNewTaskModal();
         });
       }
+
+      // 管理者モード時のみダッシュボード並び替え有効化
+      if (isAdmin) {
+        enableDashboardSorting();
+      }
+    }
+
+    // ===================================================
+    // ダッシュボードタスク並び替え - Pointer Events + 長押し
+    // ===================================================
+    function enableDashboardSorting() {
+      // 各.task-listに対して並び替えを有効化（冪等チェック）
+      const taskLists = document.querySelectorAll('.deadline-section .task-list');
+      taskLists.forEach(taskList => {
+        // 既にセットアップ済みならスキップ
+        if (taskList.dataset.sortingEnabled === 'true') return;
+        taskList.dataset.sortingEnabled = 'true';
+
+        let draggedCard = null;
+        let longPressTimer = null;
+        let isDragging = false;
+        let originalOrder = [];
+
+        const clearDropTargets = () => {
+          taskList.querySelectorAll('.drop-target-above, .drop-target-below').forEach(el => {
+            el.classList.remove('drop-target-above', 'drop-target-below');
+          });
+        };
+
+        const getTargetCard = (y) => {
+          const cards = [...taskList.querySelectorAll('.task-card')];
+          for (const card of cards) {
+            const rect = card.getBoundingClientRect();
+            if (y >= rect.top && y <= rect.bottom) {
+              return { card, position: y < rect.top + rect.height / 2 ? 'above' : 'below' };
+            }
+          }
+          return null;
+        };
+
+        const cleanup = () => {
+          if (draggedCard) draggedCard.classList.remove('dragging');
+          clearDropTargets();
+          draggedCard = null;
+          isDragging = false;
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+        };
+
+        const rollbackDOM = () => {
+          // 元の順序に戻す
+          originalOrder.forEach(id => {
+            const card = taskList.querySelector(`.task-card[data-id="${id}"]`);
+            if (card) taskList.appendChild(card);
+          });
+        };
+
+        const finishDrag = async (targetInfo) => {
+          if (!draggedCard || !targetInfo || draggedCard === targetInfo.card) {
+            cleanup();
+            return;
+          }
+
+          const cards = [...taskList.querySelectorAll('.task-card')];
+          const fromIndex = cards.indexOf(draggedCard);
+          let toIndex = cards.indexOf(targetInfo.card);
+          if (targetInfo.position === 'below') toIndex++;
+          if (fromIndex < toIndex) toIndex--;
+
+          // 同じ位置なら何もしない
+          if (fromIndex === toIndex) {
+            cleanup();
+            return;
+          }
+
+          // DOM並び替え
+          cards.splice(fromIndex, 1);
+          cards.splice(toIndex, 0, draggedCard);
+          cards.forEach(c => taskList.appendChild(c));
+
+          // 新しい順序でID配列を取得
+          const idsInOrder = cards.map(c => c.dataset.id);
+
+          cleanup();
+
+          // Firestore永続化
+          try {
+            await persistTaskOrder(idsInOrder);
+            // 成功時は再描画
+            await renderDashboard();
+            await renderMainHighlights();
+          } catch (e) {
+            console.error('並び替え永続化エラー:', e);
+            showToast('並び替えの保存に失敗しました: ' + (e.code || e.message));
+            // DOMロールバック
+            rollbackDOM();
+          }
+        };
+
+        // Pointer Events
+        taskList.addEventListener('pointerdown', (e) => {
+          const handle = e.target.closest('.drag-handle[data-drag-type="dash-task"]');
+          if (!handle) return;
+          const card = handle.closest('.task-card');
+          if (!card) return;
+          e.preventDefault();
+
+          // 元の順序を保存
+          originalOrder = [...taskList.querySelectorAll('.task-card')].map(c => c.dataset.id);
+
+          const startDrag = () => {
+            draggedCard = card;
+            isDragging = true;
+            card.classList.add('dragging');
+            card.setPointerCapture(e.pointerId);
+          };
+
+          // Mobile: 長押し300ms, PC: 即時
+          if (e.pointerType === 'touch') {
+            longPressTimer = setTimeout(startDrag, 300);
+          } else {
+            startDrag();
+          }
+        });
+
+        taskList.addEventListener('pointermove', (e) => {
+          if (longPressTimer && e.pointerType === 'touch') {
+            // 指が動いたらキャンセル
+            clearTimeout(longPressTimer);
+            longPressTimer = null;
+          }
+          if (!isDragging || !draggedCard) return;
+          e.preventDefault();
+          clearDropTargets();
+          const target = getTargetCard(e.clientY);
+          if (target && target.card !== draggedCard) {
+            target.card.classList.add(target.position === 'above' ? 'drop-target-above' : 'drop-target-below');
+          }
+        });
+
+        taskList.addEventListener('pointerup', async (e) => {
+          if (longPressTimer) { clearTimeout(longPressTimer); longPressTimer = null; }
+          if (!isDragging || !draggedCard) return;
+          const target = getTargetCard(e.clientY);
+          await finishDrag(target);
+        });
+
+        taskList.addEventListener('pointercancel', () => {
+          cleanup();
+        });
+
+        // キーボードサポート: Alt + ArrowUp/Down
+        taskList.addEventListener('keydown', async (e) => {
+          if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return;
+          const card = e.target.closest('.task-card');
+          if (!card) return;
+          e.preventDefault();
+
+          const cards = [...taskList.querySelectorAll('.task-card')];
+          const index = cards.indexOf(card);
+          const direction = e.key === 'ArrowUp' ? -1 : 1;
+          const newIndex = index + direction;
+
+          if (newIndex < 0 || newIndex >= cards.length) return;
+
+          // 視覚フィードバック
+          card.classList.add('dragging');
+          setTimeout(() => card.classList.remove('dragging'), 300);
+
+          // DOM並び替え
+          originalOrder = cards.map(c => c.dataset.id);
+          cards.splice(index, 1);
+          cards.splice(newIndex, 0, card);
+          cards.forEach(c => taskList.appendChild(c));
+
+          const idsInOrder = cards.map(c => c.dataset.id);
+
+          try {
+            await persistTaskOrder(idsInOrder);
+            await renderDashboard();
+            await renderMainHighlights();
+          } catch (err) {
+            showToast('並び替えに失敗しました: ' + (err.code || err.message));
+            rollbackDOM();
+          }
+        });
+      });
+    }
+
+    // ===================================================
+    // タスク並び順永続化 - Firestore writeBatch
+    // ===================================================
+    async function persistTaskOrder(idsInOrder) {
+      const { writeBatch, doc } = await import('https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js');
+      const batch = writeBatch(db);
+      const now = new Date().toISOString();
+      idsInOrder.forEach((id, idx) => {
+        batch.update(doc(db, 'tasks', id), {
+          manualOrder: (idx + 1) * 1000,
+          updatedAt: now
+        });
+      });
+      await batch.commit();
     }
 
     // add: 新規タスクモーダルを開く
@@ -2152,6 +2485,22 @@
           console.error('Delete error:', error);
           showToast('削除に失敗しました: ' + (error.code || error.message));
           actionBtn.disabled = false;
+        }
+      } else if (action === 'toggle-priority') {
+        // 優先度サイクル: 0 → 1 → 2 → 3 → 0
+        const currentPriority = typeof task.priority === 'number' ? task.priority : 0;
+        const newPriority = (currentPriority + 1) % 4;
+        const priorityLabels = ['普通', '優先', '重要', '最重要'];
+
+        try {
+          await updateTask(taskId, { priority: newPriority });
+          task.priority = newPriority; // キャッシュ更新
+          showToast(`「${task.title || '(無題)'}」を${priorityLabels[newPriority]}に設定`);
+          await renderDashboard();
+          await renderMainHighlights();
+        } catch (error) {
+          console.error('Priority update error:', error);
+          showToast('優先度の更新に失敗しました: ' + (error.code || error.message));
         }
       }
     }

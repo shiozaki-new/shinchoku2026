@@ -123,6 +123,12 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* Global: prevent accidental horizontal scroll on mobile */
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     /* ===================================================
        ヘッダー（部署ヘッダー）
     =================================================== */
@@ -130,24 +136,33 @@
       background: var(--bg-secondary);
       padding: var(--space-md) var(--space-lg);
       box-shadow: var(--shadow-light);
-      display: flex;
+      /* Grid 2列: 左=タイトル 右=ボタン */
+      display: grid;
+      grid-template-columns: 1fr auto;
+      grid-template-areas: 'title actions';
       align-items: center;
-      justify-content: space-between;
+      column-gap: var(--space-md);
       position: sticky;
       top: 0;
       z-index: 100;
     }
 
     .department-title {
+      grid-area: title;
       font-size: var(--font-size-xl);
       font-weight: 600;
       color: var(--text-primary);
+      min-width: 0; /* grid子要素の溢れ対策 */
     }
 
     .header-actions {
+      grid-area: actions;
+      justify-self: end;
       display: flex;
       gap: var(--space-sm);
       align-items: center;
+      flex-wrap: nowrap;
+      min-width: 0;
     }
 
     /* ヘッダーボタン共通スタイル - 高さ・文字サイズ・余白・丸み統一 */
@@ -226,12 +241,25 @@
 
     /* iPhone表示時（小画面・タッチ環境）でヘッダーフォントをさらに小さく - 1行に収める */
     @media screen and (max-width: 430px) and (hover: none) and (pointer: coarse) {
+      /* Header: 1列グリッドに変更し、ボタンは下段へ */
+      .department-header {
+        grid-template-columns: 1fr;
+        grid-template-areas: 'title' 'actions';
+        row-gap: 6px;
+        /* iOS safe areas */
+        padding-top: calc(env(safe-area-inset-top) + var(--space-sm));
+        padding-left: calc(env(safe-area-inset-left) + var(--space-md));
+        padding-right: calc(env(safe-area-inset-right) + var(--space-md));
+      }
+      .header-actions {
+        justify-self: start;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+      }
       .department-title {
         font-size: calc(var(--font-size-xl) - 6px);
       }
-      .header-actions {
-        gap: 6px; /* 少し詰める */
-      }
+      .header-actions { gap: 6px; }
       .header-actions .btn-hoshitori,
       .header-actions .btn-hoshitori-table,
       .header-actions .btn-worklog,
@@ -239,7 +267,10 @@
         font-size: clamp(10px, 3.2vw, 12px); /* iPhone幅で1行に収まる可変値 */
         padding: 0 10px; /* 左右を少し削る */
         letter-spacing: 0; /* 詰めて収まりを良くする */
+        max-width: 100%;
       }
+      /* main padding a bit tighter on very small screens */
+      .main-content { padding: var(--space-md); }
     }
 
     /* より狭い端末（SE等）に保険 */
@@ -247,6 +278,8 @@
       .header-actions {
         gap: 4px;
       }
+      .department-header { row-gap: 6px; }
+      .header-actions { flex-wrap: wrap; justify-self: start; }
       .header-actions .btn-hoshitori,
       .header-actions .btn-hoshitori-table,
       .header-actions .btn-worklog,
@@ -254,6 +287,7 @@
         font-size: clamp(10px, 3.8vw, 11.5px);
         padding: 0 8px;
       }
+      .main-content { padding: var(--space-sm) var(--space-md); }
     }
 
     /* ===================================================

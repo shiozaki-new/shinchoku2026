@@ -1895,6 +1895,7 @@
         if (!skipFetch) await fetchTasks();
 
         const tasksWithDeadline = tasks.filter(t => t.deadline);
+        const tasksWithoutDeadline = tasks.filter(t => !t.deadline); // 期限なしタスク
         const zetsuTasks = [];
         const ranTasks = [];
         const junTasks = []; // add: 循期限
@@ -1907,25 +1908,35 @@
           else if (status === 'jun') junTasks.push(task); // add: 循期限
         });
 
+        // 期限なしタスクにはステータスを設定（表示用）
+        tasksWithoutDeadline.forEach(task => {
+          task.status = 'jun'; // 期限なしはjunスタイルを使用
+        });
+
         // 並び替え（manualOrder優先、次に期限が近い順）
         zetsuTasks.sort(compareTasks);
         ranTasks.sort(compareTasks);
         junTasks.sort(compareTasks); // add: 循期限
+        tasksWithoutDeadline.sort(compareTasks); // 期限なしも並び替え
 
         let html = '';
 
-        // 絶・乱・循がすべて0件の場合
-        if (zetsuTasks.length === 0 && ranTasks.length === 0 && junTasks.length === 0) {
+        // 絶・乱・循・期限なしがすべて0件の場合
+        if (zetsuTasks.length === 0 && ranTasks.length === 0 && junTasks.length === 0 && tasksWithoutDeadline.length === 0) {
           html = `
             <div class="main-highlights-empty">
-              <p>現在、期限ありタスクはありません</p>
-              <p style="margin-top: 8px; font-size: 13px;">「進捗管理表」で全タスクを確認できます</p>
+              <p>現在、タスクはありません</p>
+              <p style="margin-top: 8px; font-size: 13px;">「進捗管理表」でタスクを追加できます</p>
             </div>
           `;
         } else {
       html += renderSection('緊急', 'zetsu', zetsuTasks, '残り5日以内かつ進捗70%以下');
       html += renderSection('注意', 'ran', ranTasks, '残り5日以内85%以下 または 残り15日以内30%以下');
       html += renderSection('順調', 'jun', junTasks, '進捗に対し期限に余裕'); // add: 循期限
+      // 期限なしタスクセクション
+      if (tasksWithoutDeadline.length > 0) {
+        html += renderSection('期限なし', 'jun', tasksWithoutDeadline, '期限が未設定のタスク');
+      }
         }
 
         elements.mainHighlights.innerHTML = html;

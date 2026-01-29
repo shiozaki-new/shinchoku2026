@@ -406,6 +406,11 @@
       color: var(--color-jun-text);
     }
 
+    .section-badge.nodeadline {
+      background: #B0B0B0;
+      color: #000000;
+    }
+
     .section-title {
       font-size: var(--font-size-lg);
       font-weight: 600;
@@ -908,6 +913,22 @@
       padding: var(--space-lg);
       box-shadow: var(--shadow-light);
       margin-bottom: var(--space-md);
+    }
+
+    .main-highlights .deadline-section.zetsu {
+      border: 3px solid var(--color-zetsu);
+    }
+
+    .main-highlights .deadline-section.ran {
+      border: 3px solid var(--color-ran);
+    }
+
+    .main-highlights .deadline-section.jun {
+      border: 3px solid var(--color-jun);
+    }
+
+    .main-highlights .deadline-section.nodeadline {
+      border: 3px solid #B0B0B0;
     }
 
     .main-highlights .section-header {
@@ -1935,7 +1956,7 @@
       html += renderSection('順調', 'jun', junTasks, '進捗に対し期限に余裕'); // add: 循期限
       // 期限なしタスクセクション
       if (tasksWithoutDeadline.length > 0) {
-        html += renderSection('期限なし', 'jun', tasksWithoutDeadline, '期限が未設定のタスク');
+        html += renderSection('期限なし', 'nodeadline', tasksWithoutDeadline, '期限が未設定のタスク');
       }
         }
 
@@ -2014,10 +2035,11 @@
     // セクションレンダリング - ④縁
     // ===================================================
     function renderSection(title, status, tasks, description) {
+      const badgeText = status === 'nodeadline' ? 'NIN' : status.toUpperCase();
       return `
-        <div class="deadline-section">
+        <div class="deadline-section ${status}">
           <div class="section-header">
-            <span class="section-badge ${status}">${status.toUpperCase()}</span>
+            <span class="section-badge ${status}">${badgeText}</span>
             <h3 class="section-title">${title}</h3>
             <span class="section-count">${tasks.length}件</span>
           </div>

@@ -1762,6 +1762,9 @@
     // ===================================================
     // 分類ロジック - ②理：期限ステータス判定
     // 新ルール（優先順位順）:
+    //   絶: 期限超過（HP問わず）
+    //   絶: 本日期限（HP問わず）
+    //   乱: 残り1日（HP問わず）
     //   絶: 残り5日以内 かつ 進捗≤70%
     //   乱: 残り5日以内 かつ 進捗≤85%（絶に該当しない）
     //   乱: 残り15日以内 かつ 進捗≤30%
@@ -1777,11 +1780,16 @@
       deadline.setHours(0, 0, 0, 0);
 
       const msPerDay = 24 * 60 * 60 * 1000;
-      let daysUntil = Math.ceil((deadline - today) / msPerDay);
-      if (daysUntil < 0) daysUntil = 0; // 期限超過も「以内」に含める
+      const daysUntil = Math.ceil((deadline - today) / msPerDay);
 
       const progress = Number(task.progress) || 0;
 
+      // 期限ベースの優先判定（HP問わず）
+      if (daysUntil < 0) return 'zetsu';  // 期限超過 → 緊急
+      if (daysUntil === 0) return 'zetsu'; // 本日期限 → 緊急
+      if (daysUntil === 1) return 'ran';   // 残り1日 → 注意
+
+      // HP（進捗）ベースの判定
       // 優先順位: 絶 → 乱（5日85%）→ 乱（15日30%）→ 循
       if (daysUntil <= 5 && progress <= 70) return 'zetsu';
       if (daysUntil <= 5 && progress <= 85) return 'ran';
@@ -1854,10 +1862,10 @@
       let html = '';
 
       // ③衡：画面上部に絶期限
-      html += renderSection('緊急', 'zetsu', zetsuTasks, '残り5日以内かつ進捗70%以下');
+      html += renderSection('緊急', 'zetsu', zetsuTasks, '超過・本日期限、または残り5日以内かつ進捗70%以下');
 
       // ③衡：次に乱期限
-      html += renderSection('注意', 'ran', ranTasks, '残り5日以内85%以下 または 残り15日以内30%以下');
+      html += renderSection('注意', 'ran', ranTasks, '残り1日、または残り5日以内85%以下、または残り15日以内30%以下');
 
       // ④縁：区切り線
       html += '<div class="section-divider"></div>';
@@ -1951,8 +1959,8 @@
             </div>
           `;
         } else {
-      html += renderSection('緊急', 'zetsu', zetsuTasks, '残り5日以内かつ進捗70%以下');
-      html += renderSection('注意', 'ran', ranTasks, '残り5日以内85%以下 または 残り15日以内30%以下');
+      html += renderSection('緊急', 'zetsu', zetsuTasks, '超過・本日期限、または残り5日以内かつ進捗70%以下');
+      html += renderSection('注意', 'ran', ranTasks, '残り1日、または残り5日以内85%以下、または残り15日以内30%以下');
       html += renderSection('順調', 'jun', junTasks, '進捗に対し期限に余裕'); // add: 循期限
       // 期限なしタスクセクション
       if (tasksWithoutDeadline.length > 0) {

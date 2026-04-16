@@ -1396,6 +1396,10 @@
       height: 44px;
       align-items: center !important;
       font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", sans-serif;
+      /* スクロール時も最上部に固定 */
+      position: sticky !important;
+      top: 0 !important;
+      z-index: 9999 !important;
     }
 
     .department-title {

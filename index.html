@@ -464,15 +464,15 @@
 
     .task-header {
       display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: var(--space-sm);
+      align-items: center;
+      gap: var(--space-sm);
     }
 
     .task-title {
       font-size: var(--font-size-base);
       font-weight: 500;
       flex: 1;
+      min-width: 0;
     }
 
     .task-title-input {
@@ -481,7 +481,8 @@
       border: 1px solid var(--border-color);
       border-radius: var(--radius-sm);
       padding: var(--space-xs) var(--space-sm);
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       font-family: inherit;
     }
 
@@ -783,7 +784,8 @@
     .task-remaining {
       font-size: var(--font-size-xs);
       color: var(--text-secondary);
-      margin-top: var(--space-xs);
+      white-space: nowrap;
+      min-width: 56px;
     }
 
     .task-remaining.overdue {
@@ -1982,6 +1984,7 @@
           <div class="task-card ${status}${priorityClass}" data-id="${task.id}" data-priority="${priority}">
             <div class="task-header">
               <span class="drag-handle" data-drag-type="dash-task" title="並び替えハンドル" aria-label="並び替え">${dragHandleSvg}</span>
+              <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
               <button type="button" class="btn-priority" data-action="toggle-priority" data-priority="${priority}" title="${priorityLabels[priority]}（クリックで変更）">${priorityIcons[priority]}</button>
               <input type="text" class="task-title-input" value="${escapeHtml(task.title)}" data-field="title">
               <input type="date" class="task-deadline-input" value="${task.deadline || ''}" data-field="deadline">
@@ -1990,8 +1993,7 @@
                 <button type="button" class="btn-icon delete" data-action="delete" title="削除">✕</button>
               </div>
             </div>
-            <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
-            ${completed ? '<div class="muted" style="margin-top:6px;font-size:12px;">完了済み</div>' : ''}
+            ${completed ? '<div class="muted" style="font-size:12px;">完了済み</div>' : ''}
           </div>
         `;
       } else {
@@ -1999,10 +2001,11 @@
         return `
           <div class="task-card ${status}${priorityClass}" data-id="${task.id}" data-priority="${priority}">
             <div class="task-header">
+              <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
+              <span style="font-size:var(--font-size-sm)">${priorityIcons[priority]}</span>
               <span class="task-title">${escapeHtml(task.title)}</span>
               <span class="task-deadline">${deadlineStr}</span>
             </div>
-            <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
           </div>
         `;
       }

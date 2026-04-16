@@ -647,6 +647,19 @@
       box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
     }
 
+    .form-input:disabled {
+      background: var(--bg-primary);
+      color: var(--text-secondary);
+      cursor: not-allowed;
+    }
+
+    .form-helper {
+      margin-top: var(--space-xs);
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
     .btn-submit {
       width: 100%;
       padding: var(--space-sm) var(--space-md);
@@ -1592,7 +1605,7 @@
        部署ヘッダー - ①認：入口
   =================================================== -->
   <header class="department-header">
-    <h1 class="department-title">企画</h1>
+    <h1 class="department-title">塩崎</h1>
     <div class="header-actions">
       <button class="btn-hoshitori-table" id="btnOpenHoshitori">
         星取
@@ -1750,11 +1763,19 @@
       <h2 class="login-title" id="newTaskModalTitle">新しいタスクを追加</h2>
       <form id="newTaskForm">
         <div class="form-group">
-          <label class="form-label">タスク名（必須）</label>
-          <input type="text" class="form-input" id="newTaskTitle" required>
+          <label class="form-label" for="newTaskCategory">大項目（任意）</label>
+          <select class="form-input" id="newTaskCategory">
+            <option value="">選択しない</option>
+          </select>
+          <p class="form-helper">選択すると「【大項目】 + 自由記入」の形式で登録します</p>
         </div>
         <div class="form-group">
-          <label class="form-label">期限（任意）</label>
+          <label class="form-label" for="newTaskTitle">自由記入（必須）</label>
+          <input type="text" class="form-input" id="newTaskTitle" required placeholder="例: dbsheet.jp">
+          <p class="form-helper" id="newTaskTitlePreview" aria-live="polite">登録名: 未入力</p>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newTaskDeadline">期限（任意）</label>
           <input type="date" class="form-input" id="newTaskDeadline">
         </div>
         <p class="login-error" id="newTaskError" style="display:none;"></p>
@@ -1823,6 +1844,7 @@
     let currentUser = null;
     let isAdmin = false;
     let tasks = [];
+    let newTaskCategories = [];
 
     // ===================================================
     // ユーティリティ - completed型ブレ正規化
@@ -1864,7 +1886,9 @@
       // add: new-task modal elements
       newTaskModal: document.getElementById('newTaskModal'),
       newTaskForm: document.getElementById('newTaskForm'),
+      newTaskCategory: document.getElementById('newTaskCategory'),
       newTaskTitle: document.getElementById('newTaskTitle'),
+      newTaskTitlePreview: document.getElementById('newTaskTitlePreview'),
       newTaskDeadline: document.getElementById('newTaskDeadline'),
       newTaskError: document.getElementById('newTaskError'),
       btnCloseNewTask: document.getElementById('btnCloseNewTask'),
@@ -2537,8 +2561,107 @@
       await batch.commit();
     }
 
+    function normalizeNewTaskCategoryTitle(rawTitle) {
+      return (rawTitle || '').trim().replace(/^【(.+)】$/, '$1');
+    }
+
+    function getSelectedNewTaskCategoryTitle() {
+      const selectedId = elements.newTaskCategory?.value || '';
+      if (!selectedId) return '';
+      const matched = newTaskCategories.find(category => category.id === selectedId);
+      return normalizeNewTaskCategoryTitle(matched?.title);
+    }
+
+    function buildNewTaskTitle(rawTitle, rawCategoryTitle = '') {
+      const categoryTitle = normalizeNewTaskCategoryTitle(rawCategoryTitle);
+      const typedTitle = (rawTitle || '').trim();
+      if (!typedTitle) return '';
+      if (!categoryTitle) return typedTitle;
+
+      const prefix = `【${categoryTitle}】`;
+      const normalizedTitle = typedTitle.startsWith(prefix)
+        ? typedTitle.slice(prefix.length).trimStart()
+        : typedTitle;
+
+      return `${prefix} ${normalizedTitle}`.trim();
+    }
+
+    function updateNewTaskTitlePreview() {
+      if (!elements.newTaskTitlePreview) return;
+
+      const categoryTitle = getSelectedNewTaskCategoryTitle();
+      const typedTitle = (elements.newTaskTitle?.value || '').trim();
+      const finalTitle = buildNewTaskTitle(typedTitle, categoryTitle);
+
+      if (finalTitle) {
+        elements.newTaskTitlePreview.textContent = `登録名: ${finalTitle}`;
+        return;
+      }
+
+      if (categoryTitle) {
+        elements.newTaskTitlePreview.textContent = `登録名: 【${categoryTitle}】 + 自由記入`;
+        return;
+      }
+
+      elements.newTaskTitlePreview.textContent = '登録名: 未入力';
+    }
+
+    async function loadNewTaskCategories() {
+      if (!elements.newTaskCategory || !db) return;
+
+      const cachedCategories = Array.isArray(hoshitoriManager?.categories)
+        ? hoshitoriManager.categories.filter(category => category && category.id && category.title)
+        : [];
+
+      try {
+        const categories = cachedCategories.length > 0
+          ? cachedCategories
+          : (await getDocs(
+              query(
+                collection(db, 'hoshitori_projects', PROJECT_ID, 'hoshitori'),
+                orderBy('order')
+              )
+            )).docs.map(snapshot => ({ id: snapshot.id, ...snapshot.data() }));
+
+        newTaskCategories = categories.filter(category => category && category.id && category.title);
+
+        if (newTaskCategories.length === 0) {
+          elements.newTaskCategory.innerHTML = '<option value="">大項目なし（自由入力のみ）</option>';
+          elements.newTaskCategory.disabled = true;
+          elements.newTaskCategory.value = '';
+          updateNewTaskTitlePreview();
+          return;
+        }
+
+        const selectedValue = elements.newTaskCategory.value;
+        const optionsHtml = [
+          '<option value="">選択しない</option>',
+          ...newTaskCategories.map(category => (
+            `<option value="${escapeHtml(category.id)}">${escapeHtml(category.title)}</option>`
+          ))
+        ].join('');
+
+        elements.newTaskCategory.innerHTML = optionsHtml;
+        elements.newTaskCategory.disabled = false;
+
+        if (selectedValue && newTaskCategories.some(category => category.id === selectedValue)) {
+          elements.newTaskCategory.value = selectedValue;
+        } else {
+          elements.newTaskCategory.value = '';
+        }
+      } catch (error) {
+        console.error('Error loading new task categories:', error);
+        newTaskCategories = [];
+        elements.newTaskCategory.innerHTML = '<option value="">大項目の取得に失敗しました</option>';
+        elements.newTaskCategory.disabled = true;
+        elements.newTaskCategory.value = '';
+      }
+
+      updateNewTaskTitlePreview();
+    }
+
     // add: 新規タスクモーダルを開く
-    function openNewTaskModal() {
+    async function openNewTaskModal() {
       elements.newTaskModal.classList.add('active');
       if (typeof onModalOpen === 'function') onModalOpen();
       // 今日以降のみ選択可
@@ -2548,11 +2671,20 @@
       const dd = String(today.getDate()).padStart(2, '0');
       elements.newTaskDeadline.min = `${yyyy}-${mm}-${dd}`;
       // フォームリセット
+      newTaskCategories = [];
+      elements.newTaskCategory.innerHTML = '<option value="">大項目を読み込み中...</option>';
+      elements.newTaskCategory.disabled = true;
+      elements.newTaskCategory.value = '';
       elements.newTaskTitle.value = '';
       elements.newTaskDeadline.value = '';
       elements.newTaskError.style.display = 'none';
+      updateNewTaskTitlePreview();
+      await loadNewTaskCategories();
       // フォーカス
-      setTimeout(() => elements.newTaskTitle.focus(), 0);
+      setTimeout(() => {
+        const focusTarget = elements.newTaskCategory.disabled ? elements.newTaskTitle : elements.newTaskCategory;
+        focusTarget.focus();
+      }, 0);
     }
 
     // add: 新規タスクモーダルを閉じる
@@ -2885,6 +3017,15 @@
       }
     });
 
+    elements.newTaskCategory?.addEventListener('change', () => {
+      updateNewTaskTitlePreview();
+      setTimeout(() => elements.newTaskTitle.focus(), 0);
+    });
+
+    elements.newTaskTitle?.addEventListener('input', () => {
+      updateNewTaskTitlePreview();
+    });
+
     // add: 新規タスクモーダル - フォーム送信
     elements.newTaskForm?.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -2892,7 +3033,9 @@
       elements.newTaskError.style.display = 'none';
 
       try {
-        const title = elements.newTaskTitle.value.trim();
+        const typedTitle = elements.newTaskTitle.value.trim();
+        const categoryTitle = getSelectedNewTaskCategoryTitle();
+        const title = buildNewTaskTitle(typedTitle, categoryTitle);
         if (!title) {
           throw { code: 'invalid-title' };
         }
@@ -2908,12 +3051,13 @@
 
         closeNewTaskModal();
         elements.newTaskForm.reset();
+        updateNewTaskTitlePreview();
         await renderDashboard();
         await renderMainHighlights();
       } catch (error) {
         const code = error.code || '';
         let msg = '追加に失敗しました';
-        if (code === 'invalid-title') msg = 'タスク名を入力してください';
+        if (code === 'invalid-title') msg = '自由記入欄を入力してください';
         else if (code === 'permission-denied') msg = '権限がありません';
         elements.newTaskError.textContent = `${msg} ${code ? '(' + code + ')' : ''}`;
         elements.newTaskError.style.display = 'block';

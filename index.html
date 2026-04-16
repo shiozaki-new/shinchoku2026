@@ -501,106 +501,6 @@
     }
 
     /* ===================================================
-       HPバー風ゲージ - ②理：ポケモンHPバー風
-    =================================================== */
-    .hp-bar-container {
-      display: flex;
-      align-items: center;
-      gap: var(--space-sm);
-    }
-
-    .hp-bar-label {
-      font-size: var(--font-size-xs);
-      color: var(--text-secondary);
-      min-width: 20px;
-    }
-
-    .hp-bar-wrapper {
-      flex: 1;
-      height: 8px;
-      background: #E5E5EA;
-      border-radius: 4px;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .hp-bar-fill {
-      height: 100%;
-      border-radius: 4px;
-      transition: width 0.3s ease, background 0.3s ease;
-    }
-
-    .hp-bar-fill.zetsu {
-      background: linear-gradient(90deg, var(--color-zetsu) 0%, #FF6961 100%);
-    }
-
-    .hp-bar-fill.ran {
-      background: linear-gradient(90deg, var(--color-ran) 0%, #FFE066 100%);
-    }
-
-    .hp-bar-fill.jun {
-      background: linear-gradient(90deg, var(--color-jun) 0%, #5AC8FA 100%);
-    }
-
-    .hp-bar-value {
-      font-size: var(--font-size-xs);
-      font-weight: 600;
-      min-width: 36px;
-      text-align: right;
-    }
-
-    /* 進捗スライダー（管理者用） */
-    .progress-slider {
-      flex: 1;
-      -webkit-appearance: none;
-      appearance: none;
-      height: 8px;
-      border-radius: 4px;
-      background: #E5E5EA;
-      outline: none;
-      cursor: pointer;
-    }
-
-    .progress-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--bg-secondary);
-      border: 2px solid var(--color-jun);
-      box-shadow: var(--shadow-light);
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .progress-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.1);
-    }
-
-    .progress-slider.zetsu::-webkit-slider-thumb {
-      border-color: var(--color-zetsu);
-    }
-
-    .progress-slider.ran::-webkit-slider-thumb {
-      border-color: var(--color-ran);
-    }
-
-    .progress-slider.jun::-webkit-slider-thumb {
-      border-color: var(--color-jun);
-    }
-
-    /* Firefox対応 */
-    .progress-slider::-moz-range-thumb {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: var(--bg-secondary);
-      border: 2px solid var(--color-jun);
-      box-shadow: var(--shadow-light);
-      cursor: pointer;
-    }
-
-    /* ===================================================
        区切り線 - ④縁：構造
     =================================================== */
     .section-divider {
@@ -1438,12 +1338,12 @@
     <h1 class="department-title">企画</h1>
     <div class="header-actions">
       <button class="btn-hoshitori-table" id="btnOpenHoshitori">
-        星取管理表
+        星取
       </button>
       <button class="btn-hoshitori" id="btnOpenDashboard">
-        進捗管理表
+        進捗
       </button>
-      <button class="btn-worklog" id="btnOpenWorklog">作業完了ログ</button>
+      <button class="btn-worklog" id="btnOpenWorklog">ログ</button>
       <button class="btn-login" id="btnLogin">
         ログイン
       </button>
@@ -1989,32 +1889,6 @@
     function setupMainHighlightsEventListeners() {
       if (!elements.mainHighlights) return;
 
-      // 進捗スライダー
-      elements.mainHighlights.querySelectorAll('.progress-slider').forEach(slider => {
-        slider.addEventListener('input', (e) => {
-          const card = e.target.closest('.task-card');
-          const taskId = card.dataset.id;
-          const value = parseInt(e.target.value);
-          card.querySelector('.hp-bar-value').textContent = `${value}%`;
-
-          const task = tasks.find(t => t.id === taskId);
-          if (task) {
-            task.progress = value;
-            const newStatus = classifyTask(task);
-            card.className = `task-card ${newStatus}`;
-            e.target.className = `progress-slider ${newStatus}`;
-          }
-        });
-
-        slider.addEventListener('change', async (e) => {
-          const card = e.target.closest('.task-card');
-          const taskId = card.dataset.id;
-          const value = parseInt(e.target.value);
-          await updateTask(taskId, { progress: value });
-          await renderMainHighlights();
-        });
-      });
-
       // タイトル編集
       elements.mainHighlights.querySelectorAll('.task-title-input').forEach(input => {
         input.addEventListener('change', async (e) => {
@@ -2116,11 +1990,6 @@
                 <button type="button" class="btn-icon delete" data-action="delete" title="削除">✕</button>
               </div>
             </div>
-            <div class="hp-bar-container">
-              <span class="hp-bar-label">HP</span>
-              <input type="range" class="progress-slider ${status}" min="0" max="100" value="${progress}" data-field="progress">
-              <span class="hp-bar-value">${progress}%</span>
-            </div>
             <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
             ${completed ? '<div class="muted" style="margin-top:6px;font-size:12px;">完了済み</div>' : ''}
           </div>
@@ -2133,13 +2002,6 @@
               <span class="task-title">${escapeHtml(task.title)}</span>
               <span class="task-deadline">${deadlineStr}</span>
             </div>
-            <div class="hp-bar-container">
-              <span class="hp-bar-label">HP</span>
-              <div class="hp-bar-wrapper">
-                <div class="hp-bar-fill ${status}" style="width: ${progress}%"></div>
-              </div>
-              <span class="hp-bar-value">${progress}%</span>
-            </div>
             <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
           </div>
         `;
@@ -2150,39 +2012,6 @@
     // イベントリスナー設定 - ⑥許：管理者のみ編集
     // ===================================================
     function setupEventListeners() {
-      // 進捗スライダー（即時色・分類更新）
-      document.querySelectorAll('.progress-slider').forEach(slider => {
-        // input: リアルタイム更新（ドラッグ中）
-        slider.addEventListener('input', (e) => {
-          const card = e.target.closest('.task-card');
-          const taskId = card.dataset.id;
-          const value = parseInt(e.target.value);
-
-          // 即時UI更新
-          card.querySelector('.hp-bar-value').textContent = `${value}%`;
-
-          // 分類再計算
-          const task = tasks.find(t => t.id === taskId);
-          if (task) {
-            task.progress = value;
-            const newStatus = classifyTask(task);
-
-            // 色更新
-            card.className = `task-card ${newStatus}`;
-            e.target.className = `progress-slider ${newStatus}`;
-          }
-        });
-
-        // change: ドラッグ終了時にFirebase更新
-        slider.addEventListener('change', async (e) => {
-          const card = e.target.closest('.task-card');
-          const taskId = card.dataset.id;
-          const value = parseInt(e.target.value);
-          await updateTask(taskId, { progress: value });
-          await renderMainHighlights();
-        });
-      });
-
       // タイトル編集
       document.querySelectorAll('.task-title-input').forEach(input => {
         input.addEventListener('change', async (e) => {

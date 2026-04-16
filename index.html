@@ -2705,9 +2705,7 @@
     // モーダル制御 - ①認：入口
     // ===================================================
     elements.btnOpenDashboard.addEventListener('click', () => {
-      elements.dashboardModal.classList.add('active');
-      if (typeof onModalOpen === 'function') onModalOpen();
-      renderDashboard();
+      openNewTaskModal();
     });
 
     elements.btnCloseDashboard.addEventListener('click', () => {

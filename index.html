@@ -1382,9 +1382,62 @@
   /* ===================================================
      FullCalendar モーダル調整
   =================================================== */
-  #fcCalendar {
+  #fcCalendar, #fcCalendarInline {
     min-height: 500px;
     font-family: var(--font-family);
+  }
+
+  /* ===================================================
+     PC版 2カラムレイアウト（タスク + カレンダー常時表示）
+  =================================================== */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-lg);
+  }
+
+  .calendar-panel {
+    display: none;
+  }
+
+  .calendar-panel-header {
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .calendar-panel-title {
+    font-size: var(--font-size-lg);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+  }
+
+  /* PC: 1024px以上で2カラム */
+  @media (min-width: 1024px) {
+    .main-content {
+      max-width: 1600px;
+    }
+    .main-grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+      align-items: start;
+    }
+    .calendar-panel {
+      display: block;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-light);
+      position: sticky;
+      top: calc(44px + var(--space-md));
+      overflow: hidden;
+    }
+    #fcCalendarInline {
+      padding: var(--space-md) var(--space-lg) var(--space-lg);
+      min-height: 620px;
+    }
+    /* PC版では「暦」ボタンは冗長なので非表示 */
+    #btnOpenCalendar {
+      display: none !important;
+    }
   }
   #fcCalendar .fc-toolbar-title {
     font-size: 18px;
@@ -1553,13 +1606,23 @@
 
   <!-- メインコンテンツ -->
   <main class="main-content">
-    <!-- 絶期限・乱期限ハイライト表示 -->
-    <section id="mainHighlights" class="main-highlights">
-      <div class="loading" role="status" aria-live="polite" aria-busy="true">
-        <div class="loading-spinner" aria-hidden="true"></div>
-        <p>読み込み中...</p>
-      </div>
-    </section>
+    <div class="main-grid">
+      <!-- 絶期限・乱期限ハイライト表示 -->
+      <section id="mainHighlights" class="main-highlights">
+        <div class="loading" role="status" aria-live="polite" aria-busy="true">
+          <div class="loading-spinner" aria-hidden="true"></div>
+          <p>読み込み中...</p>
+        </div>
+      </section>
+
+      <!-- PC版: カレンダー常時表示（右カラム） -->
+      <aside class="calendar-panel" id="calendarPanel">
+        <div class="calendar-panel-header">
+          <h3 class="calendar-panel-title">カレンダー</h3>
+        </div>
+        <div id="fcCalendarInline"></div>
+      </aside>
+    </div>
   </main>
 
   <!-- ===================================================
@@ -2092,6 +2155,9 @@
 
         // メイン領域のイベントリスナー設定（管理者編集用）
         setupMainHighlightsEventListeners();
+
+        // PC版: インラインカレンダーを初期化/更新
+        if (typeof initInlineCalendar === 'function') initInlineCalendar();
       } catch (error) {
         console.error('renderMainHighlights error:', error);
         elements.mainHighlights.innerHTML = `
@@ -2866,6 +2932,7 @@
     // カレンダーモーダル（FullCalendar）
     // ===================================================
     let fcCalendarInstance = null;
+    let fcCalendarInlineInstance = null;
     function tasksToCalendarEvents() {
       const colorMap = {
         zetsu: '#FF3B30',
@@ -2927,6 +2994,52 @@
         setTimeout(() => fcCalendarInstance.updateSize(), 0);
       }
     }
+
+    function initInlineCalendar() {
+      const calEl = document.getElementById('fcCalendarInline');
+      if (!calEl) return;
+      // PC版（1024px以上）のみ初期化
+      if (window.matchMedia('(max-width: 1023px)').matches) return;
+      if (fcCalendarInlineInstance) {
+        fcCalendarInlineInstance.removeAllEvents();
+        fcCalendarInlineInstance.addEventSource(tasksToCalendarEvents());
+        fcCalendarInlineInstance.setOption('editable', isAdmin);
+        setTimeout(() => fcCalendarInlineInstance.updateSize(), 0);
+        return;
+      }
+      fcCalendarInlineInstance = new FullCalendar.Calendar(calEl, {
+        locale: 'ja',
+        initialView: 'dayGridMonth',
+        height: 'auto',
+        headerToolbar: {
+          left: 'prev,next today',
+          center: 'title',
+          right: 'dayGridMonth,listMonth'
+        },
+        buttonText: { today: '今日', month: '月', list: '一覧' },
+        editable: isAdmin,
+        events: tasksToCalendarEvents(),
+        eventClick: (info) => {
+          showToast(`${info.event.title}（${info.event.startStr}）`);
+        },
+        eventDrop: async (info) => {
+          if (!isAdmin) { info.revert(); return; }
+          const newDate = info.event.startStr;
+          await updateTask(info.event.id, { deadline: newDate });
+          const local = tasks.find(t => t.id === info.event.id);
+          if (local) local.deadline = newDate;
+          await renderMainHighlights();
+        }
+      });
+      fcCalendarInlineInstance.render();
+    }
+
+    // PCサイズに切り替わったらインラインカレンダーを初期化
+    window.addEventListener('resize', () => {
+      if (!window.matchMedia('(max-width: 1023px)').matches && !fcCalendarInlineInstance) {
+        initInlineCalendar();
+      }
+    });
 
     if (elements.btnOpenCalendar) {
       elements.btnOpenCalendar.addEventListener('click', openCalendarModal);

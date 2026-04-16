@@ -1597,7 +1597,7 @@
       <button class="btn-hoshitori-table" id="btnOpenHoshitori">
         星取
       </button>
-      <button class="btn-hoshitori" id="btnOpenDashboard">
+      <button class="btn-hoshitori" id="btnOpenDashboard" style="display:none;">
         追加
       </button>
       <button class="btn-worklog" id="btnOpenCalendar">暦</button>
@@ -1905,6 +1905,7 @@
     // ===================================================
     function updateAuthUI() {
       const btn = elements.btnLogin;
+      elements.btnOpenDashboard.style.display = currentUser ? 'inline-flex' : 'none';
       if (currentUser) {
         btn.textContent = 'ログアウト';
         btn.classList.add('logged-in');

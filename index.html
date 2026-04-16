@@ -1379,6 +1379,91 @@
     opacity: 1;
   }
   </style>
+
+  <!-- ===================================================
+       Apple GlobalNav 風ヘッダー（ビジュアル移植）
+       機能は変更せず、見た目のみ Apple.com 風に
+  =================================================== -->
+  <style>
+    /* ==== Apple GlobalNav 風バー ==== */
+    .department-header {
+      background: rgba(251, 251, 253, 0.8) !important;
+      backdrop-filter: saturate(180%) blur(20px);
+      -webkit-backdrop-filter: saturate(180%) blur(20px);
+      box-shadow: none !important;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      padding: 0 22px !important;
+      height: 44px;
+      align-items: center !important;
+      font-family: "SF Pro Text", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "Hiragino Sans", sans-serif;
+    }
+
+    .department-title {
+      font-size: 15px !important;
+      font-weight: 400 !important;
+      color: #1d1d1f !important;
+      letter-spacing: 0 !important;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .header-actions {
+      gap: 0 !important;
+    }
+
+    /* ==== ヘッダーボタンを Apple globalnav リンク風に ==== */
+    .header-actions .btn-hoshitori,
+    .header-actions .btn-hoshitori-table,
+    .header-actions .btn-worklog,
+    .header-actions .btn-login {
+      background: transparent !important;
+      background-image: none !important;
+      color: #1d1d1f !important;
+      border: 0 !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      height: 44px !important;
+      padding: 0 10px !important;
+      font-size: 12px !important;
+      font-weight: 400 !important;
+      letter-spacing: 0 !important;
+      line-height: 44px !important;
+      opacity: 0.8;
+      transition: opacity 0.32s cubic-bezier(0.4, 0, 0.6, 1);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .header-actions .btn-hoshitori:hover,
+    .header-actions .btn-hoshitori-table:hover,
+    .header-actions .btn-worklog:hover,
+    .header-actions .btn-login:hover {
+      background: transparent !important;
+      color: #1d1d1f !important;
+      opacity: 1;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .header-actions .btn-hoshitori:active,
+    .header-actions .btn-hoshitori-table:active,
+    .header-actions .btn-worklog:active,
+    .header-actions .btn-login:active {
+      transform: none !important;
+    }
+
+    /* スマホ: Apple 同様に余白を詰める */
+    @media (max-width: 640px) {
+      .department-header {
+        padding: 0 16px !important;
+      }
+      .header-actions .btn-hoshitori,
+      .header-actions .btn-hoshitori-table,
+      .header-actions .btn-worklog,
+      .header-actions .btn-login {
+        padding: 0 8px !important;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- ===================================================

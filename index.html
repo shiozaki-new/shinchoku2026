@@ -1378,7 +1378,61 @@
   .app-toast.show {
     opacity: 1;
   }
+
+  /* ===================================================
+     FullCalendar モーダル調整
+  =================================================== */
+  #fcCalendar {
+    min-height: 500px;
+    font-family: var(--font-family);
+  }
+  #fcCalendar .fc-toolbar-title {
+    font-size: 18px;
+    font-weight: 600;
+  }
+  #fcCalendar .fc-button {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+    font-weight: 500;
+    text-transform: none;
+    box-shadow: none;
+  }
+  #fcCalendar .fc-button:hover {
+    background: #EAEAEF;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+  }
+  #fcCalendar .fc-button-primary:not(:disabled).fc-button-active,
+  #fcCalendar .fc-button-primary:not(:disabled):active {
+    background: var(--color-jun);
+    border-color: var(--color-jun);
+    color: #fff;
+  }
+  #fcCalendar .fc-day-today {
+    background: rgba(0, 122, 255, 0.06) !important;
+  }
+  #fcCalendar .fc-event {
+    border-radius: 6px;
+    padding: 2px 4px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+  }
+  @media (max-width: 640px) {
+    #fcCalendar .fc-toolbar {
+      flex-direction: column;
+      gap: 8px;
+    }
+    #fcCalendar .fc-toolbar-title {
+      font-size: 16px;
+    }
+  }
   </style>
+
+  <!-- FullCalendar (OSS: MIT) -->
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/locales/ja.global.min.js"></script>
 
   <!-- ===================================================
        Apple GlobalNav 風ヘッダー（ビジュアル移植）
@@ -1489,6 +1543,7 @@
       <button class="btn-hoshitori" id="btnOpenDashboard">
         追加
       </button>
+      <button class="btn-worklog" id="btnOpenCalendar">暦</button>
       <button class="btn-worklog" id="btnOpenWorklog">ログ</button>
       <button class="btn-login" id="btnLogin">
         ログイン
@@ -1565,6 +1620,19 @@
   <!-- ===================================================
        作業完了ログモーダル
   =================================================== -->
+  <!-- カレンダーモーダル -->
+  <div class="worklog-modal" id="calendarModal">
+    <div class="worklog-container" role="dialog" aria-modal="true" aria-labelledby="calendarTitle" tabindex="-1" style="max-width: 1100px;">
+      <header class="worklog-header">
+        <h2 class="worklog-title" id="calendarTitle">カレンダー</h2>
+        <button type="button" class="modal-close" id="btnCloseCalendar" aria-label="閉じる">×</button>
+      </header>
+      <div class="worklog-body">
+        <div id="fcCalendar"></div>
+      </div>
+    </div>
+  </div>
+
   <div class="worklog-modal" id="worklogModal">
     <div class="worklog-container" role="dialog" aria-modal="true" aria-labelledby="worklogTitle" tabindex="-1">
       <header class="worklog-header">
@@ -1711,6 +1779,9 @@
       btnOpenWorklog: document.getElementById('btnOpenWorklog'),
       btnCloseWorklog: document.getElementById('btnCloseWorklog'),
       worklogModal: document.getElementById('worklogModal'),
+      btnOpenCalendar: document.getElementById('btnOpenCalendar'),
+      btnCloseCalendar: document.getElementById('btnCloseCalendar'),
+      calendarModal: document.getElementById('calendarModal'),
       worklogBody: document.getElementById('worklogBody'),
       btnLogin: document.getElementById('btnLogin'),
       btnCloseLogin: document.getElementById('btnCloseLogin'),
@@ -2790,6 +2861,90 @@
         elements.loginModal.classList.add('active'); if (typeof onModalOpen === 'function') onModalOpen();
       }
     });
+
+    // ===================================================
+    // カレンダーモーダル（FullCalendar）
+    // ===================================================
+    let fcCalendarInstance = null;
+    function tasksToCalendarEvents() {
+      const colorMap = {
+        zetsu: '#FF3B30',
+        ran: '#FFCC00',
+        jun: '#007AFF'
+      };
+      return tasks
+        .filter(t => t.deadline)
+        .map(t => {
+          const status = classifyTask(t) || 'jun';
+          const color = colorMap[status] || '#8E8E93';
+          return {
+            id: t.id,
+            title: t.title || '(無題)',
+            start: t.deadline,
+            allDay: true,
+            backgroundColor: color,
+            borderColor: color,
+            textColor: status === 'ran' ? '#1d1d1f' : '#ffffff'
+          };
+        });
+    }
+
+    async function openCalendarModal() {
+      elements.calendarModal.classList.add('active');
+      if (typeof onModalOpen === 'function') onModalOpen();
+      await fetchTasks();
+      const calEl = document.getElementById('fcCalendar');
+      if (!fcCalendarInstance) {
+        fcCalendarInstance = new FullCalendar.Calendar(calEl, {
+          locale: 'ja',
+          initialView: 'dayGridMonth',
+          height: 'auto',
+          headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek,listMonth'
+          },
+          buttonText: { today: '今日', month: '月', week: '週', list: '一覧' },
+          editable: isAdmin,
+          events: tasksToCalendarEvents(),
+          eventClick: (info) => {
+            showToast(`${info.event.title}（${info.event.startStr}）`);
+          },
+          eventDrop: async (info) => {
+            if (!isAdmin) { info.revert(); return; }
+            const newDate = info.event.startStr;
+            await updateTask(info.event.id, { deadline: newDate });
+            const local = tasks.find(t => t.id === info.event.id);
+            if (local) local.deadline = newDate;
+            await renderMainHighlights();
+          }
+        });
+        fcCalendarInstance.render();
+      } else {
+        fcCalendarInstance.removeAllEvents();
+        fcCalendarInstance.addEventSource(tasksToCalendarEvents());
+        fcCalendarInstance.setOption('editable', isAdmin);
+        setTimeout(() => fcCalendarInstance.updateSize(), 0);
+      }
+    }
+
+    if (elements.btnOpenCalendar) {
+      elements.btnOpenCalendar.addEventListener('click', openCalendarModal);
+    }
+    if (elements.btnCloseCalendar) {
+      elements.btnCloseCalendar.addEventListener('click', () => {
+        if (typeof onModalClose === 'function') onModalClose();
+        elements.calendarModal.classList.remove('active');
+      });
+    }
+    if (elements.calendarModal) {
+      elements.calendarModal.addEventListener('click', (e) => {
+        if (e.target === elements.calendarModal) {
+          if (typeof onModalClose === 'function') onModalClose();
+          elements.calendarModal.classList.remove('active');
+        }
+      });
+    }
 
     // 作業完了ログ モーダル開閉
     if (elements.btnOpenWorklog) {

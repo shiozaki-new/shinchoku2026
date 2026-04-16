@@ -1456,11 +1456,13 @@
       display: none !important;
     }
   }
-  #fcCalendar .fc-toolbar-title {
+  #fcCalendar .fc-toolbar-title,
+  #fcCalendarInline .fc-toolbar-title {
     font-size: 18px;
     font-weight: 600;
   }
-  #fcCalendar .fc-button {
+  #fcCalendar .fc-button,
+  #fcCalendarInline .fc-button {
     background: var(--bg-primary);
     color: var(--text-primary);
     border: 1px solid var(--border-color);
@@ -1468,33 +1470,52 @@
     text-transform: none;
     box-shadow: none;
   }
-  #fcCalendar .fc-button:hover {
+  #fcCalendar .fc-button:hover,
+  #fcCalendarInline .fc-button:hover {
     background: #EAEAEF;
     color: var(--text-primary);
     border-color: var(--border-color);
   }
   #fcCalendar .fc-button-primary:not(:disabled).fc-button-active,
-  #fcCalendar .fc-button-primary:not(:disabled):active {
+  #fcCalendar .fc-button-primary:not(:disabled):active,
+  #fcCalendarInline .fc-button-primary:not(:disabled).fc-button-active,
+  #fcCalendarInline .fc-button-primary:not(:disabled):active {
     background: var(--color-jun);
     border-color: var(--color-jun);
     color: #fff;
   }
-  #fcCalendar .fc-day-today {
+  #fcCalendar .fc-day-today,
+  #fcCalendarInline .fc-day-today {
     background: rgba(0, 122, 255, 0.06) !important;
   }
-  #fcCalendar .fc-event {
+  #fcCalendar .fc-event,
+  #fcCalendarInline .fc-event {
     border-radius: 6px;
     padding: 2px 4px;
     font-size: 12px;
     font-weight: 500;
     cursor: pointer;
   }
+  #fcCalendar .fc-event.holiday-event,
+  #fcCalendarInline .fc-event.holiday-event {
+    background: #FFF1F2 !important;
+    border-color: #FECDD3 !important;
+    color: #BE123C !important;
+    cursor: default;
+  }
+  #fcCalendar .fc-list-event.holiday-event td,
+  #fcCalendarInline .fc-list-event.holiday-event td {
+    background: #FFF1F2;
+    color: #BE123C;
+  }
   @media (max-width: 640px) {
-    #fcCalendar .fc-toolbar {
+    #fcCalendar .fc-toolbar,
+    #fcCalendarInline .fc-toolbar {
       flex-direction: column;
       gap: 8px;
     }
-    #fcCalendar .fc-toolbar-title {
+    #fcCalendar .fc-toolbar-title,
+    #fcCalendarInline .fc-toolbar-title {
       font-size: 16px;
     }
   }
@@ -3080,16 +3101,51 @@
     // ===================================================
     // カレンダーモーダル（FullCalendar）
     // ===================================================
+    const HOLIDAYS_JP_API_BASE = 'https://holidays-jp.github.io/api/v1';
+    const holidayCacheByYear = new Map();
     let fcCalendarInstance = null;
     let fcCalendarInlineInstance = null;
-    function tasksToCalendarEvents() {
+    function formatCalendarDate(date) {
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function getCalendarRangeBounds(fetchInfo) {
+      const startDate = fetchInfo?.start instanceof Date ? fetchInfo.start : null;
+      const endDate = fetchInfo?.end instanceof Date ? new Date(fetchInfo.end.getTime() - 1) : null;
+      return {
+        start: startDate ? formatCalendarDate(startDate) : null,
+        endInclusive: endDate ? formatCalendarDate(endDate) : null
+      };
+    }
+
+    function getCalendarYears(fetchInfo) {
+      const startYear = fetchInfo?.start?.getFullYear?.();
+      const endYear = fetchInfo?.end ? new Date(fetchInfo.end.getTime() - 1).getFullYear() : startYear;
+      if (!startYear || !endYear) return [];
+
+      const years = [];
+      for (let year = startYear; year <= endYear; year += 1) {
+        years.push(year);
+      }
+      return years;
+    }
+
+    function tasksToCalendarEvents(fetchInfo = null) {
       const colorMap = {
         zetsu: '#FF3B30',
         ran: '#FFCC00',
         jun: '#007AFF'
       };
+      const range = getCalendarRangeBounds(fetchInfo);
       return tasks
-        .filter(t => t.deadline)
+        .filter((t) => {
+          if (!t.deadline) return false;
+          if (!range.start || !range.endInclusive) return true;
+          return t.deadline >= range.start && t.deadline <= range.endInclusive;
+        })
         .map(t => {
           const status = classifyTask(t) || 'jun';
           const color = colorMap[status] || '#8E8E93';
@@ -3100,9 +3156,78 @@
             allDay: true,
             backgroundColor: color,
             borderColor: color,
-            textColor: status === 'ran' ? '#1d1d1f' : '#ffffff'
+            textColor: status === 'ran' ? '#1d1d1f' : '#ffffff',
+            editable: isAdmin,
+            extendedProps: {
+              isHoliday: false
+            }
           };
         });
+    }
+
+    async function fetchHolidayMapByYear(year) {
+      if (holidayCacheByYear.has(year)) {
+        return holidayCacheByYear.get(year);
+      }
+
+      const response = await fetch(`${HOLIDAYS_JP_API_BASE}/${year}/date.json`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          holidayCacheByYear.set(year, {});
+          return {};
+        }
+        throw new Error(`holiday-fetch-failed:${year}:${response.status}`);
+      }
+
+      const holidayMap = await response.json();
+      holidayCacheByYear.set(year, holidayMap);
+      return holidayMap;
+    }
+
+    async function holidaysToCalendarEvents(fetchInfo) {
+      const years = getCalendarYears(fetchInfo);
+      const range = getCalendarRangeBounds(fetchInfo);
+      const holidayMaps = await Promise.all(years.map(fetchHolidayMapByYear));
+      const holidayEvents = [];
+
+      holidayMaps.forEach((holidayMap) => {
+        Object.entries(holidayMap || {}).forEach(([date, name]) => {
+          if (range.start && date < range.start) return;
+          if (range.endInclusive && date > range.endInclusive) return;
+
+          holidayEvents.push({
+            id: `holiday-${date}`,
+            title: name,
+            start: date,
+            allDay: true,
+            editable: false,
+            classNames: ['holiday-event'],
+            backgroundColor: '#FFF1F2',
+            borderColor: '#FECDD3',
+            textColor: '#BE123C',
+            extendedProps: {
+              isHoliday: true
+            }
+          });
+        });
+      });
+
+      return holidayEvents;
+    }
+
+    async function calendarEvents(fetchInfo, successCallback, failureCallback) {
+      const taskEvents = tasksToCalendarEvents(fetchInfo);
+
+      try {
+        const holidayEvents = await holidaysToCalendarEvents(fetchInfo);
+        successCallback([...holidayEvents, ...taskEvents]);
+      } catch (error) {
+        console.error('Error loading holiday events:', error);
+        successCallback(taskEvents);
+        if (typeof failureCallback === 'function') {
+          failureCallback(error);
+        }
+      }
     }
 
     async function openCalendarModal() {
@@ -3122,8 +3247,12 @@
           },
           buttonText: { today: '今日', month: '月', week: '週', list: '一覧' },
           editable: isAdmin,
-          events: tasksToCalendarEvents(),
+          events: calendarEvents,
           eventClick: (info) => {
+            if (info.event.extendedProps?.isHoliday) {
+              showToast(`${info.event.title}（祝日）`);
+              return;
+            }
             showToast(`${info.event.title}（${info.event.startStr}）`);
           },
           eventDrop: async (info) => {
@@ -3137,9 +3266,8 @@
         });
         fcCalendarInstance.render();
       } else {
-        fcCalendarInstance.removeAllEvents();
-        fcCalendarInstance.addEventSource(tasksToCalendarEvents());
         fcCalendarInstance.setOption('editable', isAdmin);
+        fcCalendarInstance.refetchEvents();
         setTimeout(() => fcCalendarInstance.updateSize(), 0);
       }
     }
@@ -3150,9 +3278,8 @@
       // PC版（1024px以上）のみ初期化
       if (window.matchMedia('(max-width: 1023px)').matches) return;
       if (fcCalendarInlineInstance) {
-        fcCalendarInlineInstance.removeAllEvents();
-        fcCalendarInlineInstance.addEventSource(tasksToCalendarEvents());
         fcCalendarInlineInstance.setOption('editable', isAdmin);
+        fcCalendarInlineInstance.refetchEvents();
         setTimeout(() => fcCalendarInlineInstance.updateSize(), 0);
         return;
       }
@@ -3167,8 +3294,12 @@
         },
         buttonText: { today: '今日', month: '月', list: '一覧' },
         editable: isAdmin,
-        events: tasksToCalendarEvents(),
+        events: calendarEvents,
         eventClick: (info) => {
+          if (info.event.extendedProps?.isHoliday) {
+            showToast(`${info.event.title}（祝日）`);
+            return;
+          }
           showToast(`${info.event.title}（${info.event.startStr}）`);
         },
         eventDrop: async (info) => {

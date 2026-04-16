@@ -742,13 +742,56 @@
         padding: var(--space-md);
       }
 
+      /* スマホ: タスクカード 3行レイアウト */
       .task-header {
-        flex-direction: column;
+        flex-wrap: wrap;
         gap: var(--space-xs);
       }
 
-      .task-deadline {
+      /* ドラッグハンドルはスマホでは非表示 */
+      .task-header .drag-handle {
+        display: none;
+      }
+
+      /* 1行目: 期限・重要度・アクションを横並び */
+      .task-header .task-remaining {
+        order: 1;
+        flex-shrink: 0;
+      }
+
+      .task-header .btn-priority {
+        order: 2;
+        flex-shrink: 0;
+      }
+
+      /* アクションボタンを右端に */
+      .task-header .task-actions {
+        order: 3;
+        margin-left: auto;
+        flex-shrink: 0;
+      }
+
+      /* 2行目: 項目（full width で改行） */
+      .task-header .task-title-input,
+      .task-header .task-title {
+        order: 4;
+        width: 100%;
+        flex: none;
+      }
+
+      /* 3行目: 納期日（full width, 項目と幅を揃える） */
+      .task-header .task-deadline-input,
+      .task-header .task-deadline {
+        order: 5;
+        width: 100%;
+        flex: none;
         margin-left: 0;
+      }
+
+      /* 閲覧モードの重要度アイコン */
+      .task-header > span[style] {
+        order: 2;
+        flex-shrink: 0;
       }
 
       .department-header {

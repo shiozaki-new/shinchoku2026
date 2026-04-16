@@ -1429,7 +1429,9 @@
       /* 緊急カードの 3px ボーダーと上端を揃えるため、透明 3px ボーダーで補正 */
       border: 3px solid transparent;
       position: sticky;
-      top: calc(44px + var(--space-md));
+      /* body の 44px padding-top で fixed ヘッダー分は確保済みのため、
+         ここでは main-content と同じ上余白だけを確保して上端を揃える */
+      top: var(--space-xl);
       overflow: hidden;
     }
     #fcCalendarInline {

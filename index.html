@@ -844,6 +844,8 @@
       .task-header {
         flex-wrap: wrap;
         gap: var(--space-xs);
+        row-gap: 4px;
+        align-items: center;
       }
 
       /* ドラッグハンドルはスマホでは非表示 */
@@ -851,10 +853,19 @@
         display: none;
       }
 
-      /* 1行目: 期限・重要度・アクションを横並び */
+      /* 1行目: 残り日数・重要度・✓・✕ を同じ高さで一列に */
+      .task-header .task-remaining,
+      .task-header .btn-priority,
+      .task-header .task-actions {
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+      }
+
       .task-header .task-remaining {
         order: 1;
         flex-shrink: 0;
+        line-height: 1;
       }
 
       .task-header .btn-priority {
@@ -1252,21 +1263,31 @@
 
     .task-header {
       gap: 6px;
-      row-gap: 6px;
-      align-items: flex-start;
+      row-gap: 4px;
+      align-items: center;
+    }
+
+    /* 1行目に 残り日数・重要度・✓・✕ をまとめる */
+    .task-header .task-remaining,
+    .task-header .btn-priority,
+    .task-header .task-actions {
+      align-self: center;
+      height: 24px;
+      display: inline-flex;
+      align-items: center;
     }
 
     .task-remaining {
       min-width: 0;
       font-size: 11px;
       font-weight: 500;
-      line-height: 1.2;
+      line-height: 1;
     }
 
     .btn-priority,
     .btn-icon {
-      width: 28px;
-      height: 28px;
+      width: 24px;
+      height: 24px;
       font-size: 13px;
     }
 

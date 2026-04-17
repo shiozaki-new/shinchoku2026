@@ -3714,6 +3714,43 @@
         }
       });
       fcCalendarMobileInstance.render();
+      attachMobileCalendarSwipe(calEl);
+    }
+
+    // スマホカレンダーに横スワイプで月移動を追加
+    function attachMobileCalendarSwipe(calEl) {
+      if (!calEl || calEl.dataset.swipeAttached === '1') return;
+      calEl.dataset.swipeAttached = '1';
+      let startX = 0;
+      let startY = 0;
+      let tracking = false;
+      const THRESHOLD = 50;
+      const VERT_TOLERANCE = 40;
+
+      calEl.addEventListener('touchstart', (e) => {
+        if (e.touches.length !== 1) { tracking = false; return; }
+        // イベントチップや日セルのタップは無視せず座標だけ記録
+        const t = e.touches[0];
+        startX = t.clientX;
+        startY = t.clientY;
+        tracking = true;
+      }, { passive: true });
+
+      calEl.addEventListener('touchend', (e) => {
+        if (!tracking) return;
+        tracking = false;
+        const t = e.changedTouches[0];
+        const dx = t.clientX - startX;
+        const dy = t.clientY - startY;
+        if (Math.abs(dx) < THRESHOLD) return;
+        if (Math.abs(dy) > VERT_TOLERANCE) return; // 縦スクロール時は無視
+        if (!fcCalendarMobileInstance) return;
+        if (dx < 0) {
+          fcCalendarMobileInstance.next();
+        } else {
+          fcCalendarMobileInstance.prev();
+        }
+      }, { passive: true });
     }
 
     // PCサイズに切り替わったらインラインカレンダーを初期化

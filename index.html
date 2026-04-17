@@ -126,8 +126,11 @@
     /* Global: prevent accidental horizontal scroll on mobile */
     html, body {
       max-width: 100%;
-      overflow-x: hidden;
+      overflow-x: clip;
+      overscroll-behavior-x: none;
     }
+    html { touch-action: pan-y; }
+    body { position: relative; width: 100%; }
 
     /* ===================================================
        ヘッダー（部署ヘッダー）
@@ -1154,17 +1157,33 @@
     }
 
     .main-content {
-      padding: 12px 12px calc(env(safe-area-inset-bottom) + 104px);
+      padding: 16px 16px calc(env(safe-area-inset-bottom) + 104px);
     }
 
     .main-highlights {
-      margin-bottom: 12px;
+      margin-bottom: 16px;
     }
 
     .main-highlights .deadline-section {
-      padding: 12px;
-      margin-bottom: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
       border-width: 2px;
+      border-radius: 14px;
+    }
+
+    .main-highlights .task-list {
+      overflow-x: hidden;
+    }
+
+    .task-card {
+      max-width: 100%;
+      box-sizing: border-box;
+    }
+
+    .task-card *,
+    .task-card input {
+      max-width: 100%;
+      box-sizing: border-box;
     }
 
     .main-highlights .section-header {
@@ -1912,6 +1931,10 @@
     @media (max-width: 640px) {
       .department-header {
         padding: 0 16px !important;
+        /* スクロール時に下のカード内容が透けないよう不透明にする */
+        background: #fbfbfd !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
       }
       .header-actions .btn-hoshitori,
       .header-actions .btn-hoshitori-table,

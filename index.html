@@ -1148,6 +1148,136 @@
   .btn-priority[data-priority="2"] { color: #ffd700; }
   .btn-priority[data-priority="3"] { color: #ff6b6b; }
 
+  @media screen and (max-width: 430px) and (hover: none) and (pointer: coarse) {
+    body {
+      padding-bottom: calc(env(safe-area-inset-bottom) + 88px);
+    }
+
+    .main-content {
+      padding: 12px 12px calc(env(safe-area-inset-bottom) + 104px);
+    }
+
+    .main-highlights {
+      margin-bottom: 12px;
+    }
+
+    .main-highlights .deadline-section {
+      padding: 12px;
+      margin-bottom: 12px;
+      border-width: 2px;
+    }
+
+    .main-highlights .section-header {
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .section-badge {
+      padding: 4px 8px;
+      font-size: 10px;
+      letter-spacing: 0.3px;
+    }
+
+    .section-title {
+      font-size: 16px;
+    }
+
+    .section-count {
+      font-size: 12px;
+    }
+
+    .task-list {
+      gap: 8px;
+      max-height: 280px;
+    }
+
+    .task-card {
+      padding: 10px;
+      border-radius: 12px;
+    }
+
+    .task-card.priority-1,
+    .task-card.priority-2,
+    .task-card.priority-3 {
+      padding: 10px;
+      background: var(--bg-primary);
+      background-image: none;
+      animation: none;
+      box-shadow: none;
+      border: 1px solid rgba(29, 29, 31, 0.06) !important;
+    }
+
+    .task-card.priority-1::after,
+    .task-card.priority-2::after,
+    .task-card.priority-3::after {
+      display: none;
+    }
+
+    .task-card.zetsu {
+      border-left: 3px solid var(--color-zetsu) !important;
+    }
+
+    .task-card.ran {
+      border-left: 3px solid var(--color-ran) !important;
+    }
+
+    .task-card.jun {
+      border-left: 3px solid var(--color-jun) !important;
+    }
+
+    .task-header {
+      gap: 6px;
+      row-gap: 6px;
+      align-items: flex-start;
+    }
+
+    .task-remaining {
+      min-width: 0;
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .btn-priority,
+    .btn-icon {
+      width: 24px;
+      height: 24px;
+      font-size: 12px;
+    }
+
+    .task-actions {
+      gap: 2px;
+      margin-left: auto;
+    }
+
+    .task-title-input {
+      min-height: 32px;
+      padding: 5px 8px;
+      font-size: 14px;
+    }
+
+    .task-deadline-field {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .task-deadline-display {
+      min-height: 32px;
+      padding: 5px 30px 5px 8px;
+      font-size: 14px;
+    }
+
+    .task-deadline-icon {
+      right: 8px;
+      width: 14px;
+      height: 14px;
+    }
+
+    .task-deadline-icon svg {
+      width: 14px;
+      height: 14px;
+    }
+  }
+
   /* Floating Admin Bar (FAB) */
   .admin-fab {
     position: fixed;

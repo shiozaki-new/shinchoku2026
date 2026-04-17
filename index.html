@@ -689,42 +689,14 @@
       margin-bottom: var(--space-lg);
     }
 
-    /* スマホ: モーダルの内側余白を詰めて、項目を見やすくする */
-    @media (max-width: 640px) {
-      .login-modal {
-        padding: 12px;
-        align-items: flex-start;
-        padding-top: calc(env(safe-area-inset-top) + 24px);
-      }
-      .login-container {
-        padding: 20px 18px;
-        max-width: 100%;
-        border-radius: 16px;
-      }
-      .login-title {
-        font-size: 18px;
-        margin-bottom: 16px;
-        padding-right: 32px; /* ×ボタンとの重なり回避 */
-        text-align: left;
-      }
-      .form-group {
-        margin-bottom: 12px;
-      }
-      .form-input {
-        font-size: 16px; /* iOS の自動ズーム防止（16px 未満だと拡大される）*/
-        min-height: 44px;
-      }
-      .form-helper {
-        line-height: 1.4;
-      }
-      .login-close {
-        top: 12px;
-        right: 12px;
-      }
-      .btn-submit {
-        min-height: 48px;
-        font-size: 15px;
-      }
+    /* iOS Safari で input[type="date"] が他の入力より高くなる・段ズレするのを防ぐ */
+    .form-input[type="date"] {
+      -webkit-appearance: none;
+      appearance: none;
+      min-height: 0;
+      line-height: 1.4;
+      box-sizing: border-box;
+      display: block;
     }
 
     .form-group {

@@ -447,6 +447,9 @@
       border-radius: var(--radius-md);
       padding: var(--space-md);
       transition: all 0.2s ease;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .task-card:hover {
@@ -469,6 +472,9 @@
       display: flex;
       align-items: center;
       gap: var(--space-sm);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .task-title {
@@ -919,6 +925,9 @@
 
       .task-card.is-view-only .task-header {
         flex-wrap: nowrap;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
       }
 
       .task-card.is-view-only .task-header::after {
@@ -938,7 +947,8 @@
 
       .task-card.is-view-only .task-title-scroller {
         order: 3;
-        flex: 1 1 auto;
+        flex: 1 1 0;
+        width: 0;
         min-width: 0;
         overflow-x: auto;
         overflow-y: hidden;
@@ -946,6 +956,7 @@
         -webkit-overflow-scrolling: touch;
         overscroll-behavior-x: contain;
         touch-action: pan-x;
+        scrollbar-width: thin;
       }
 
       .task-card.is-view-only .task-title-scroller .task-title {
@@ -1023,6 +1034,9 @@
       padding: var(--space-lg);
       box-shadow: var(--shadow-light);
       margin-bottom: var(--space-md);
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .main-highlights .deadline-section.zetsu {
@@ -1242,6 +1256,9 @@
       margin-bottom: 16px;
       border-width: 2px;
       border-radius: 14px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .main-highlights .task-list {
@@ -1344,6 +1361,9 @@
     .task-card.is-view-only .task-header {
       flex-wrap: nowrap;
       gap: 8px;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
     }
 
     .task-card.is-view-only .task-header::after {
@@ -1356,7 +1376,8 @@
     }
 
     .task-card.is-view-only .task-title-scroller {
-      flex: 1 1 auto;
+      flex: 1 1 0;
+      width: 0;
       min-width: 0;
       overflow-x: auto;
       overflow-y: hidden;
@@ -1364,6 +1385,7 @@
       -webkit-overflow-scrolling: touch;
       overscroll-behavior-x: contain;
       touch-action: pan-x;
+      scrollbar-width: thin;
     }
 
     .task-card.is-view-only .task-title-scroller .task-title {

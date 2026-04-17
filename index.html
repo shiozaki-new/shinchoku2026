@@ -2661,6 +2661,9 @@
         // 管理者モードクラス適用
         elements.mainHighlights.classList.toggle('admin-mode', isAdmin);
 
+        // 未ログイン表示は各セクション3件ぶんで高さを止め、以降は内部スクロール
+        requestAnimationFrame(applyMainHighlightsListHeights);
+
         // メイン領域のイベントリスナー設定（管理者編集用）
         setupMainHighlightsEventListeners();
 
@@ -2676,6 +2679,32 @@
           </div>
         `;
       }
+    }
+
+    function applyMainHighlightsListHeights() {
+      if (!elements.mainHighlights) return;
+
+      const visibleItems = 3;
+      const isGuestView = !elements.mainHighlights.classList.contains('admin-mode');
+      const taskLists = elements.mainHighlights.querySelectorAll('.task-list');
+
+      taskLists.forEach((taskList) => {
+        taskList.style.maxHeight = '';
+
+        if (!isGuestView) return;
+
+        const cards = [...taskList.querySelectorAll('.task-card')];
+        if (cards.length <= visibleItems) return;
+
+        const computedStyle = window.getComputedStyle(taskList);
+        const gap = parseFloat(computedStyle.rowGap || computedStyle.gap || '0') || 0;
+        const visibleHeight = cards
+          .slice(0, visibleItems)
+          .reduce((sum, card) => sum + card.getBoundingClientRect().height, 0)
+          + gap * (visibleItems - 1);
+
+        taskList.style.maxHeight = `${Math.ceil(visibleHeight)}px`;
+      });
     }
 
     // メインハイライト用イベントリスナー
@@ -3908,6 +3937,7 @@
       if (window.matchMedia('(max-width: 1023px)').matches && !fcCalendarMobileInstance) {
         initMobileCalendar();
       }
+      applyMainHighlightsListHeights();
     });
 
     if (elements.btnOpenCalendar) {

@@ -2693,11 +2693,11 @@
         if (!isGuestView) return;
 
         const section = taskList.closest('.deadline-section');
-        const visibleItems = (
-          section?.classList.contains('ran')
-          || section?.classList.contains('jun')
-          || section?.classList.contains('nodeadline')
-        ) ? 2 : 3;
+        const visibleItems = section?.classList.contains('jun') || section?.classList.contains('nodeadline')
+          ? 1
+          : section?.classList.contains('ran')
+            ? 2
+            : 3;
 
         const cards = [...taskList.querySelectorAll('.task-card')];
         if (cards.length <= visibleItems) return;

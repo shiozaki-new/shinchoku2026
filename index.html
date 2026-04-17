@@ -2684,7 +2684,6 @@
     function applyMainHighlightsListHeights() {
       if (!elements.mainHighlights) return;
 
-      const visibleItems = 3;
       const isGuestView = !elements.mainHighlights.classList.contains('admin-mode');
       const taskLists = elements.mainHighlights.querySelectorAll('.task-list');
 
@@ -2692,6 +2691,13 @@
         taskList.style.maxHeight = '';
 
         if (!isGuestView) return;
+
+        const section = taskList.closest('.deadline-section');
+        const visibleItems = (
+          section?.classList.contains('ran')
+          || section?.classList.contains('jun')
+          || section?.classList.contains('nodeadline')
+        ) ? 2 : 3;
 
         const cards = [...taskList.querySelectorAll('.task-card')];
         if (cards.length <= visibleItems) return;

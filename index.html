@@ -478,6 +478,11 @@
       min-width: 0;
     }
 
+    .task-title-scroller {
+      flex: 1;
+      min-width: 0;
+    }
+
     .task-title-input {
       font-size: var(--font-size-base);
       font-weight: 500;
@@ -912,6 +917,44 @@
         flex-shrink: 0;
       }
 
+      .task-card.is-view-only .task-header {
+        flex-wrap: nowrap;
+      }
+
+      .task-card.is-view-only .task-header::after {
+        content: none;
+      }
+
+      .task-card.is-view-only .task-remaining {
+        order: 1;
+        flex: 0 0 auto;
+      }
+
+      .task-card.is-view-only .task-deadline {
+        order: 2;
+        flex: 0 0 auto;
+        margin-left: 0;
+      }
+
+      .task-card.is-view-only .task-title-scroller {
+        order: 3;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        white-space: nowrap;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: contain;
+        touch-action: pan-x;
+      }
+
+      .task-card.is-view-only .task-title-scroller .task-title {
+        display: inline-block;
+        min-width: max-content;
+        max-width: none;
+        white-space: nowrap;
+      }
+
       .department-header {
         padding: var(--space-sm) var(--space-md);
       }
@@ -947,6 +990,10 @@
       color: var(--text-secondary);
       white-space: nowrap;
       min-width: 56px;
+    }
+
+    .task-remaining:empty {
+      display: none;
     }
 
     .task-remaining.overdue {
@@ -1292,6 +1339,38 @@
       min-height: 34px;
       padding: 6px 8px;
       font-size: 14px;
+    }
+
+    .task-card.is-view-only .task-header {
+      flex-wrap: nowrap;
+      gap: 8px;
+    }
+
+    .task-card.is-view-only .task-header::after {
+      content: none;
+    }
+
+    .task-card.is-view-only .task-remaining,
+    .task-card.is-view-only .task-deadline {
+      flex: 0 0 auto;
+    }
+
+    .task-card.is-view-only .task-title-scroller {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow-x: auto;
+      overflow-y: hidden;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      touch-action: pan-x;
+    }
+
+    .task-card.is-view-only .task-title-scroller .task-title {
+      display: inline-block;
+      min-width: max-content;
+      max-width: none;
+      white-space: nowrap;
     }
 
     .task-deadline-field {
@@ -2697,11 +2776,12 @@
       } else {
         // 閲覧モード：編集不可（優先度エフェクトは表示）
         return `
-          <div class="task-card ${status}${priorityClass}" data-id="${task.id}" data-priority="${priority}">
+          <div class="task-card ${status}${priorityClass} is-view-only" data-id="${task.id}" data-priority="${priority}">
             <div class="task-header">
               <div class="task-remaining ${isOverdue ? 'overdue' : ''}">${remainingText}</div>
-              <span style="font-size:var(--font-size-sm)">${priorityIcons[priority]}</span>
-              <span class="task-title">${escapeHtml(task.title)}</span>
+              <div class="task-title-scroller">
+                <span class="task-title">${escapeHtml(task.title)}</span>
+              </div>
               <span class="task-deadline">${deadlineStr}</span>
             </div>
           </div>

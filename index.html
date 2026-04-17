@@ -242,38 +242,37 @@
     }
     .btn-worklog:hover { background: #DDD6FE; }
 
-    /* iPhone表示時（小画面・タッチ環境）でヘッダーフォントをさらに小さく - 1行に収める */
+    /* iPhone表示時（小画面・タッチ環境）でヘッダーを1行に収める */
     @media screen and (max-width: 430px) and (hover: none) and (pointer: coarse) {
-      /* Header: 1列グリッドに変更し、ボタンは下段へ */
+      /* Header: 1行グリッドを維持（title 左 / actions 右） */
       .department-header {
-        grid-template-columns: 1fr;
-        grid-template-areas: 'title' 'actions';
-        row-gap: 6px;
-        justify-items: center; /* 子要素の中央寄せ */
-        /* iOS safe areas */
-        padding-top: calc(env(safe-area-inset-top) + var(--space-sm));
+        grid-template-columns: auto 1fr;
+        grid-template-areas: 'title actions';
+        row-gap: 0;
+        column-gap: 8px;
+        justify-items: stretch;
+        padding-top: env(safe-area-inset-top);
         padding-left: calc(env(safe-area-inset-left) + var(--space-md));
         padding-right: calc(env(safe-area-inset-right) + var(--space-md));
       }
       .header-actions {
-        justify-self: center;
-        flex-wrap: wrap;
-        justify-content: center; /* ボタン群を中央寄せ */
+        justify-self: end;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: 2px;
       }
       .department-title {
-        font-size: calc(var(--font-size-xl) - 6px);
-        justify-self: center;
-        text-align: center;
+        font-size: 14px;
+        justify-self: start;
+        text-align: left;
       }
-      .header-actions { gap: 6px; }
       .header-actions .btn-hoshitori,
       .header-actions .btn-hoshitori-table,
       .header-actions .btn-worklog,
       .header-actions .btn-login {
-        font-size: clamp(10px, 3.2vw, 12px); /* iPhone幅で1行に収まる可変値 */
-        padding: 0 10px; /* 左右を少し削る */
-        letter-spacing: 0; /* 詰めて収まりを良くする */
-        max-width: 100%;
+        font-size: 12px;
+        padding: 0 8px;
+        letter-spacing: 0;
       }
       /* main padding a bit tighter on very small screens */
       .main-content { padding: var(--space-md); }
@@ -281,18 +280,14 @@
 
     /* より狭い端末（SE等）に保険 */
     @media screen and (max-width: 375px) and (hover: none) and (pointer: coarse) {
-      .header-actions {
-        gap: 4px;
-      }
-      .department-header { row-gap: 6px; justify-items: center; }
-      .header-actions { flex-wrap: wrap; justify-self: center; justify-content: center; }
-      .department-title { justify-self: center; text-align: center; }
+      .department-header { column-gap: 4px; }
+      .header-actions { gap: 0; }
       .header-actions .btn-hoshitori,
       .header-actions .btn-hoshitori-table,
       .header-actions .btn-worklog,
       .header-actions .btn-login {
-        font-size: clamp(10px, 3.8vw, 11.5px);
-        padding: 0 8px;
+        font-size: 11px;
+        padding: 0 6px;
       }
       .main-content { padding: var(--space-sm) var(--space-md); }
     }

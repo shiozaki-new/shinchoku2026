@@ -3139,6 +3139,10 @@
       return `${yyyy}-${mm}-${dd}`;
     }
 
+    function renderCalendarDayNumber(arg) {
+      return String(arg.date.getDate());
+    }
+
     function getCalendarRangeBounds(fetchInfo) {
       const startDate = fetchInfo?.start instanceof Date ? fetchInfo.start : null;
       const endDate = fetchInfo?.end instanceof Date ? new Date(fetchInfo.end.getTime() - 1) : null;
@@ -3266,6 +3270,7 @@
         fcCalendarInstance = new FullCalendar.Calendar(calEl, {
           locale: 'ja',
           initialView: 'dayGridMonth',
+          dayCellContent: renderCalendarDayNumber,
           height: 'auto',
           headerToolbar: {
             left: 'prev,next today',
@@ -3313,6 +3318,7 @@
       fcCalendarInlineInstance = new FullCalendar.Calendar(calEl, {
         locale: 'ja',
         initialView: 'dayGridMonth',
+        dayCellContent: renderCalendarDayNumber,
         height: 'auto',
         headerToolbar: {
           left: 'prev,next today',
@@ -3355,6 +3361,7 @@
       fcCalendarMobileInstance = new FullCalendar.Calendar(calEl, {
         locale: 'ja',
         initialView: 'dayGridMonth',
+        dayCellContent: renderCalendarDayNumber,
         height: 'auto',
         headerToolbar: {
           left: 'prev,next today',

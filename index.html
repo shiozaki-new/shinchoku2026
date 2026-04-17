@@ -1730,6 +1730,12 @@
   #fcCalendarMobile .fc-day-sat .fc-daygrid-day-number {
     color: var(--color-jun);
   }
+  /* 祝日の日付を赤字にする（日曜の赤と同じ色）*/
+  #fcCalendar .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-number,
+  #fcCalendarInline .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-number,
+  #fcCalendarMobile .fc-daygrid-day.fc-day-holiday .fc-daygrid-day-number {
+    color: var(--color-zetsu);
+  }
   #fcCalendar .fc-event,
   #fcCalendarInline .fc-event {
     border-radius: 6px;
@@ -3538,6 +3544,18 @@
       return holidayMap;
     }
 
+    // 祝日イベントがマウントされた日セルに fc-day-holiday クラスを付与
+    function markHolidayDayCell(info) {
+      if (!info.event.extendedProps?.isHoliday) return;
+      const dateStr = info.event.startStr;
+      if (!dateStr) return;
+      const calRoot = info.view?.calendar?.el;
+      if (!calRoot) return;
+      calRoot.querySelectorAll(`.fc-daygrid-day[data-date="${dateStr}"]`).forEach((el) => {
+        el.classList.add('fc-day-holiday');
+      });
+    }
+
     async function holidaysToCalendarEvents(fetchInfo) {
       const years = getCalendarYears(fetchInfo);
       const range = getCalendarRangeBounds(fetchInfo);
@@ -3617,7 +3635,8 @@
             const local = tasks.find(t => t.id === info.event.id);
             if (local) local.deadline = newDate;
             await renderMainHighlights();
-          }
+          },
+          eventDidMount: markHolidayDayCell
         });
         fcCalendarInstance.render();
       } else {
@@ -3665,7 +3684,8 @@
           const local = tasks.find(t => t.id === info.event.id);
           if (local) local.deadline = newDate;
           await renderMainHighlights();
-        }
+        },
+        eventDidMount: markHolidayDayCell
       });
       fcCalendarInlineInstance.render();
     }
@@ -3711,7 +3731,8 @@
           const local = tasks.find(t => t.id === info.event.id);
           if (local) local.deadline = newDate;
           await renderMainHighlights();
-        }
+        },
+        eventDidMount: markHolidayDayCell
       });
       fcCalendarMobileInstance.render();
       attachMobileCalendarSwipe(calEl);

@@ -1,25 +1,25 @@
 {
-  "name": "星取進捗ダッシュボード",
-  "short_name": "星取進捗",
-  "description": "部門横断のタスク進捗を可視化し、緊急・注意・順調を一目で把握できる社内ダッシュボード。Firebase認証/Firestoreでリアルタイム更新。",
-  "start_url": "/",
-  "scope": "/",
+  "name": "大阪展示会 思鳴会議室",
+  "short_name": "思鳴会議室",
+  "description": "大阪展示会の認・思・鳴を確定し、次のAIへ引き継ぐための会議室。",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0d1117",
-  "theme_color": "#0d1117",
+  "background_color": "#07131d",
+  "theme_color": "#07131d",
   "icons": [
     {
-      "src": "/icon-32.png",
+      "src": "./icon-32.png",
       "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }

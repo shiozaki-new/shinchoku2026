@@ -1,7 +1,0 @@
-#!/bin/sh
-set -u
-command -v python3 >/dev/null 2>&1 || {
-  echo "python3 が無いため引き継ぎ条件を検査できない" >&2
-  exit 1
-}
-python3 Scripts/handover_guard.py

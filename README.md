@@ -24,8 +24,8 @@ python3 Scripts/handover_guard.py
 
 ## 正本
 
-読む順序は [認の書](Docs/認書.md) → [思の書](Docs/思書.md) →
-[鳴の書](Docs/鳴書.md) → [示の書](Docs/示書.md) → コードです。
+読む順序は [`Docs/認書.md`](Docs/認書.md) → [`Docs/思書.md`](Docs/思書.md) →
+[`Docs/鳴書.md`](Docs/鳴書.md) → [`Docs/示書.md`](Docs/示書.md) → コードです。
 現在の合意は [`Docs/思鳴の継.md`](Docs/思鳴の継.md)、機械可読な会議項目は
 [`Docs/会議項目.json`](Docs/会議項目.json) にあります。
 
